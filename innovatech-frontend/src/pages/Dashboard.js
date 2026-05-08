@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { dashboardService } from '../services/api';
 import Navbar from '../components/Navbar';
 import { useTheme } from '../App';
-import { FiFolder, FiUsers, FiTrendingUp, FiClock } from 'react-icons/fi';
+import { FiFolder, FiUsers, FiTrendingUp, FiClock, FiShield } from 'react-icons/fi';
 
 function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { darkMode } = useTheme(); // Lee el tema global
+  const username = localStorage.getItem('username') || 'usuario';
+  const rol = localStorage.getItem('rol') || 'USUARIO';
 
   // Colores según tema
   const colors = {
@@ -67,6 +69,15 @@ function Dashboard() {
   const junior = dashboard.recursos.filter(r => r.nivelExperiencia === 'JUNIOR').length;
   const semiSenior = dashboard.recursos.filter(r => r.nivelExperiencia === 'SEMI_SENIOR').length;
   const senior = dashboard.recursos.filter(r => r.nivelExperiencia === 'SENIOR').length;
+  const rolInfo = getRolInfo(rol);
+
+  const getIdsProyectos = (recurso) => {
+    // idProyectos es la relacion multiple; idProyecto queda como respaldo antiguo.
+    if (Array.isArray(recurso.idProyectos) && recurso.idProyectos.length > 0) {
+      return recurso.idProyectos;
+    }
+    return recurso.idProyecto ? [recurso.idProyecto] : [];
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, transition: 'all 0.3s' }}>
@@ -85,6 +96,21 @@ function Dashboard() {
             📅 {new Date().toLocaleDateString('es-CL', {
               weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
             })}
+          </div>
+        </div>
+
+        {/* Franja visible para explicar el rol activo durante la presentacion */}
+        <div style={{ ...styles.rolePanel, backgroundColor: colors.card, borderColor: colors.border }}>
+          <div style={{ ...styles.roleIcon, backgroundColor: `${rolInfo.color}22`, color: rolInfo.color }}>
+            <FiShield size={22} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ ...styles.roleTitle, color: colors.text }}>
+              Sesion activa: {username} | Rol: {rolInfo.label}
+            </div>
+            <div style={{ ...styles.permissionList, color: colors.subtext }}>
+              {rolInfo.permisos.join(' | ')}
+            </div>
           </div>
         </div>
 
@@ -123,6 +149,42 @@ function Dashboard() {
           <StatCard label="Junior" value={junior} color="#a855f7" bg={darkMode ? '#4c1d9522' : '#faf5ff'} darkMode={darkMode} />
           <StatCard label="Semi Senior" value={semiSenior} color="#6366f1" bg={darkMode ? '#312e8122' : '#eef2ff'} darkMode={darkMode} />
           <StatCard label="Senior" value={senior} color="#f59e0b" bg={darkMode ? '#78350f22' : '#fffbeb'} darkMode={darkMode} />
+        </div>
+
+        {/* Resumen ejecutivo de asignaciones proyecto -> equipo */}
+        <SectionTitle title="Asignaciones de equipos" total={dashboard.proyectos.length} colors={colors} />
+        <div style={styles.assignmentGrid}>
+          {dashboard.proyectos.length === 0 ? (
+            <div style={{ ...styles.assignmentCard, backgroundColor: colors.card, borderColor: colors.border, color: colors.subtext }}>
+              Sin proyectos para relacionar.
+            </div>
+          ) : dashboard.proyectos.map(p => {
+            const asignados = dashboard.recursos.filter(r => getIdsProyectos(r).map(String).includes(String(p.id)));
+            return (
+              <div key={p.id} style={{ ...styles.assignmentCard, backgroundColor: colors.card, borderColor: colors.border }}>
+                <div style={{ ...styles.assignmentHeader, color: colors.text }}>
+                  <span>{p.nombre}</span>
+                  <span style={p.vistoBueno ? styles.miniApproved : styles.miniPending}>
+                    {p.vistoBueno ? 'Aprobado' : 'Pendiente'}
+                  </span>
+                </div>
+                <div style={{ color: colors.subtext, fontSize: '12px', marginBottom: '10px' }}>
+                  Responsable: {p.responsable || 'Sin responsable'}
+                </div>
+                {asignados.length === 0 ? (
+                  <span style={{ color: colors.subtext, fontSize: '13px' }}>Sin empleados asignados</span>
+                ) : (
+                  <div style={styles.assignedList}>
+                    {asignados.map(r => (
+                      <span key={r.id} style={{ ...styles.assignedBadge, borderColor: colors.border, color: colors.text }}>
+                        {r.nombre} {r.apellido}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Tablas */}
@@ -193,7 +255,6 @@ function Dashboard() {
 // Componente KPI grande para las métricas principales
 function KpiCard({ icon, label, value, color, darkMode }) {
   const bg = darkMode ? '#1e293b' : 'white';
-  const textColor = darkMode ? '#f1f5f9' : '#0f172a';
   const subColor = darkMode ? '#94a3b8' : '#64748b';
   return (
     <div style={{
@@ -260,6 +321,29 @@ function TableCard({ title, children, colors }) {
   );
 }
 
+function getRolInfo(rol) {
+  // Texto pensado para defensa: muestra claramente que los permisos son jerarquicos.
+  if (rol === 'ADMIN') {
+    return {
+      label: 'Administrador',
+      color: '#6366f1',
+      permisos: ['Gestion completa', 'Administra proyectos', 'Administra recursos', 'Aprueba proyectos'],
+    };
+  }
+  if (rol === 'JEFE_PROYECTO') {
+    return {
+      label: 'Jefe de Proyecto',
+      color: '#22c55e',
+      permisos: ['Crea y edita proyectos', 'Asigna recursos', 'Aprueba proyectos'],
+    };
+  }
+  return {
+    label: 'Usuario',
+    color: '#f59e0b',
+    permisos: ['Visualiza informacion', 'Da o quita visto bueno'],
+  };
+}
+
 const styles = {
   container: { padding: '24px', maxWidth: '1400px', margin: '0 auto' },
   centerScreen: { display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -270,10 +354,31 @@ const styles = {
   title: { fontSize: '28px', fontWeight: '800', marginBottom: '4px' },
   dateBox: { padding: '10px 16px', borderRadius: '10px', fontSize: '13px',
     fontWeight: '500', textTransform: 'capitalize' },
-  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '8px' },
-  grid4: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '8px' },
-  grid3: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '8px' },
-  tablesGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '32px' },
+  rolePanel: {
+    border: '1px solid', borderRadius: '14px', padding: '16px',
+    display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px',
+    boxShadow: '0 4px 18px rgba(0,0,0,0.06)',
+  },
+  roleIcon: {
+    width: '46px', height: '46px', borderRadius: '12px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  roleTitle: { fontSize: '15px', fontWeight: '800', marginBottom: '4px' },
+  permissionList: { fontSize: '13px', lineHeight: 1.4 },
+  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '8px' },
+  grid4: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '14px', marginBottom: '8px' },
+  grid3: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '8px' },
+  assignmentGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', marginBottom: '8px' },
+  assignmentCard: {
+    border: '1px solid', borderRadius: '14px', padding: '16px',
+    boxShadow: '0 4px 18px rgba(0,0,0,0.06)',
+  },
+  assignmentHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', fontWeight: '800', marginBottom: '6px' },
+  assignedList: { display: 'flex', gap: '6px', flexWrap: 'wrap' },
+  assignedBadge: { padding: '5px 9px', borderRadius: '8px', border: '1px solid', fontSize: '12px', fontWeight: '700' },
+  miniApproved: { backgroundColor: '#dcfce7', color: '#15803d', padding: '4px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: '800' },
+  miniPending: { backgroundColor: '#fef3c7', color: '#b45309', padding: '4px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: '800' },
+  tablesGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginTop: '32px' },
   table: { width: '100%', borderCollapse: 'collapse' },
   th: { padding: '12px 16px', textAlign: 'left', fontSize: '11px',
     fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' },
