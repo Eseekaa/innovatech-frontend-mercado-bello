@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL base del BFF - el frontend SOLO habla con el BFF, nunca directo a los microservicios
-// En casa: puerto 8080, en el Duoc: puerto 8084
+// En casa: puerto 8084, en el Duoc: puerto 8084
 const BFF_URL = 'http://localhost:8084/api/bff';
 
 // URL del microservicio de autenticación
@@ -32,12 +32,9 @@ api.interceptors.request.use((config) => {
 // No necesitan token JWT para funcionar
 export const authService = {
   // POST /api/auth/register - crea un nuevo usuario en ms-auth
-  // Recibe: { username, password, email, rol }
   register: (data) => axios.post(`${AUTH_URL}/register`, data),
   
   // POST /api/auth/login - verifica credenciales y retorna token JWT
-  // Recibe: { username, password }
-  // Retorna: { token, username, rol }
   login: (data) => axios.post(`${AUTH_URL}/login`, data),
 };
 
@@ -57,7 +54,6 @@ export const proyectosService = {
   getAll: () => api.get('/proyectos'),
   
   // POST /api/bff/proyectos - crea un nuevo proyecto
-  // Recibe: { nombre, descripcion, estado, responsable, fechaInicio, fechaFin }
   create: (data) => api.post('/proyectos', data),
   
   // PUT /api/bff/proyectos/{id} - actualiza un proyecto existente
@@ -74,14 +70,26 @@ export const recursosService = {
   getAll: () => api.get('/recursos'),
   
   // POST /api/bff/recursos - crea un nuevo empleado
-  // Recibe: { nombre, apellido, email, cargo, departamento, disponibilidad, nivelExperiencia }
+  // Recibe: { nombre, apellido, email, cargo, departamento, disponibilidad, nivelExperiencia, idProyecto }
   create: (data) => api.post('/recursos', data),
   
   // PUT /api/bff/recursos/{id} - actualiza un empleado
   update: (id, data) => api.put(`/recursos/${id}`, data),
+
+  // PATCH /api/bff/recursos/{id}/proyecto/{idProyecto}
+  // Cambia solo la asignacion a proyecto; si no hay ID, lo deja sin proyecto.
+  asignarProyecto: (id, idProyecto) => {
+    const url = idProyecto ? `/recursos/${id}/proyecto/${idProyecto}` : `/recursos/${id}/proyecto`;
+    return api.patch(url);
+  },
   
   // DELETE /api/bff/recursos/{id} - elimina un empleado
   delete: (id) => api.delete(`/recursos/${id}`),
+
+  // GET /api/bff/recursos/proyecto/{idProyecto}
+  // Retorna todos los recursos asignados a un proyecto específico
+  // Útil para ver qué empleados están trabajando en un proyecto
+  obtenerPorProyecto: (idProyecto) => api.get(`/recursos/proyecto/${idProyecto}`),
 };
 
 export default api;

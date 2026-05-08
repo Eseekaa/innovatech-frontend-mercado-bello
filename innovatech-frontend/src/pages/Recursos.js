@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { recursosService } from '../services/api';
+import { recursosService, proyectosService } from '../services/api';
 import Navbar from '../components/Navbar';
 import { useTheme } from '../App';
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiMail, FiBriefcase } from 'react-icons/fi';
 
 function Recursos() {
   const [recursos, setRecursos] = useState([]);
-  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', cargo: '',
-    departamento: '', disponibilidad: 'DISPONIBLE', nivelExperiencia: 'JUNIOR' });
+  const [proyectos, setProyectos] = useState([]); // Lista de proyectos para asignar empleados
+  const [form, setForm] = useState({
+    nombre: '', apellido: '', email: '', cargo: '',
+    departamento: '', disponibilidad: 'DISPONIBLE',
+    nivelExperiencia: 'JUNIOR', idProyectos: []
+  });
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
   const { darkMode } = useTheme();
   const rol = localStorage.getItem('rol');
+  
+  // Jerarquia de permisos:
+  // USUARIO: solo visualiza recursos.
+  // JEFE_PROYECTO: crea/edita recursos y asigna empleados a proyectos.
+  // ADMIN: hereda lo anterior y ademas puede eliminar recursos.
   const esAdmin = rol === 'ADMIN';
+  const esJefe = rol === 'JEFE_PROYECTO';
+  const puedeGestionarRecursos = esAdmin || esJefe;
+  const puedeEliminarRecursos = esAdmin;
 
   const colors = {
     bg: darkMode ? '#0f172a' : '#f0f2f5',
@@ -26,35 +39,114 @@ function Recursos() {
     cardHeader: darkMode ? '#273344' : '#f8f9ff',
   };
 
-  useEffect(() => { fetchRecursos(); }, []);
+  // Carga empleados y proyectos al iniciar
+  useEffect(() => {
+    fetchRecursos();
+    fetchProyectos();
+  }, []);
+
+  const mostrarMensaje = (tipo, texto) => {
+    // Mensaje temporal para confirmar acciones sin revisar la consola ni H2.
+    setMensaje({ tipo, texto });
+    setTimeout(() => setMensaje(null), 2800);
+  };
 
   const fetchRecursos = async () => {
     const response = await recursosService.getAll();
     setRecursos(response.data);
   };
 
+  // Carga proyectos para mostrarlos en el select del formulario
+  const fetchProyectos = async () => {
+    try {
+      const response = await proyectosService.getAll();
+      setProyectos(response.data);
+    } catch (err) {
+      console.error('Error cargando proyectos:', err);
+    }
+  };
+
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleProyectoToggle = (idProyecto) => {
+    const id = Number(idProyecto);
+    const actuales = form.idProyectos || [];
+    const nuevos = actuales.includes(id)
+      ? actuales.filter(item => item !== id)
+      : [...actuales, id];
+    setForm({ ...form, idProyectos: nuevos });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editId) { await recursosService.update(editId, form); }
-    else { await recursosService.create(form); }
-    setForm({ nombre: '', apellido: '', email: '', cargo: '',
-      departamento: '', disponibilidad: 'DISPONIBLE', nivelExperiencia: 'JUNIOR' });
-    setEditId(null); setShowForm(false); fetchRecursos();
+    // idProyecto mantiene compatibilidad con la columna antigua de H2.
+    // idProyectos es la lista real para asignar un empleado a varios proyectos.
+    const data = {
+      ...form,
+      idProyecto: form.idProyectos.length > 0 ? form.idProyectos[0] : null,
+      idProyectos: form.idProyectos
+    };
+    try {
+      if (editId) {
+        await recursosService.update(editId, data);
+        mostrarMensaje('success', 'Empleado actualizado correctamente.');
+      } else {
+        await recursosService.create(data);
+        mostrarMensaje('success', 'Empleado creado correctamente.');
+      }
+      setForm({ nombre: '', apellido: '', email: '', cargo: '',
+        departamento: '', disponibilidad: 'DISPONIBLE',
+        nivelExperiencia: 'JUNIOR', idProyectos: [] });
+      setEditId(null); setShowForm(false); fetchRecursos();
+    } catch (err) {
+      mostrarMensaje('error', 'No se pudo guardar el empleado.');
+    }
   };
 
   const handleEdit = (r) => {
-    setForm({ nombre: r.nombre, apellido: r.apellido, email: r.email,
+    setForm({
+      nombre: r.nombre, apellido: r.apellido, email: r.email,
       cargo: r.cargo, departamento: r.departamento,
-      disponibilidad: r.disponibilidad, nivelExperiencia: r.nivelExperiencia });
+      disponibilidad: r.disponibilidad, nivelExperiencia: r.nivelExperiencia,
+      idProyectos: getIdsProyectos(r)
+    });
     setEditId(r.id); setShowForm(true);
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Eliminar este empleado?')) {
-      await recursosService.delete(id); fetchRecursos();
+      try {
+        await recursosService.delete(id);
+        mostrarMensaje('success', 'Empleado eliminado correctamente.');
+        fetchRecursos();
+      } catch (err) {
+        mostrarMensaje('error', 'No se pudo eliminar el empleado.');
+      }
     }
+  };
+
+  const getIdsProyectos = (recurso) => {
+    if (Array.isArray(recurso.idProyectos) && recurso.idProyectos.length > 0) return recurso.idProyectos;
+    return recurso.idProyecto ? [recurso.idProyecto] : [];
+  };
+
+  // Busca el nombre del proyecto por ID para mostrarlo en la card
+  const getNombreProyecto = (idProyecto) => {
+    if (!idProyecto) return 'Sin proyecto asignado';
+    // Compara como texto para que funcione aunque el ID venga como numero o string.
+    const proyecto = proyectos.find(p => String(p.id) === String(idProyecto));
+    return proyecto ? proyecto.nombre : `Proyecto #${idProyecto}`;
+  };
+
+  const getRecursosPorProyecto = (idProyecto) => {
+    // Relaciona proyectos con empleados usando la lista de proyectos del recurso.
+    return recursos.filter(r => getIdsProyectos(r).map(String).includes(String(idProyecto)));
+  };
+
+  const getNombresProyectos = (recurso) => {
+    const ids = getIdsProyectos(recurso);
+    if (ids.length === 0) return 'Sin proyecto asignado';
+    return ids.map(getNombreProyecto).join(', ');
   };
 
   const dispConfig = {
@@ -69,7 +161,6 @@ function Recursos() {
     'SENIOR': { color: '#f59e0b', label: '🌟 Senior' },
   };
 
-  // Genera color de avatar basado en las iniciales
   const avatarColors = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#a855f7'];
   const getAvatarColor = (name) => avatarColors[name.charCodeAt(0) % avatarColors.length];
 
@@ -77,6 +168,16 @@ function Recursos() {
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, transition: 'all 0.3s' }}>
       <Navbar />
       <div style={styles.container}>
+        {mensaje && (
+          <div style={{
+            ...styles.toast,
+            backgroundColor: mensaje.tipo === 'success' ? '#dcfce7' : '#fee2e2',
+            color: mensaje.tipo === 'success' ? '#15803d' : '#b91c1c',
+            borderColor: mensaje.tipo === 'success' ? '#86efac' : '#fecaca',
+          }}>
+            {mensaje.texto}
+          </div>
+        )}
         {/* Header */}
         <div style={styles.header}>
           <div>
@@ -85,22 +186,27 @@ function Recursos() {
               {recursos.length} empleado(s) registrado(s)
             </p>
           </div>
-          {esAdmin && (
+          {/* ADMIN y JEFE_PROYECTO pueden crear empleados */}
+          {puedeGestionarRecursos && (
             <button
-              style={showForm ? { padding: '11px 20px', borderRadius: '10px', cursor: 'pointer',
+              style={showForm ? {
+                padding: '11px 20px', borderRadius: '10px', cursor: 'pointer',
                 fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px',
-                backgroundColor: colors.card, color: colors.subtext, border: `2px solid ${colors.border}` }
-                : styles.btnPrimary}
-              onClick={() => { setShowForm(!showForm); setEditId(null);
+                backgroundColor: colors.card, color: colors.subtext, border: `2px solid ${colors.border}`
+              } : styles.btnPrimary}
+              onClick={() => {
+                setShowForm(!showForm); setEditId(null);
                 setForm({ nombre: '', apellido: '', email: '', cargo: '',
-                  departamento: '', disponibilidad: 'DISPONIBLE', nivelExperiencia: 'JUNIOR' }); }}>
+                  departamento: '', disponibilidad: 'DISPONIBLE',
+                  nivelExperiencia: 'JUNIOR', idProyectos: [] });
+              }}>
               {showForm ? <><FiX size={16} /> Cancelar</> : <><FiPlus size={16} /> Nuevo Empleado</>}
             </button>
           )}
         </div>
 
         {/* Formulario */}
-        {showForm && esAdmin && (
+        {showForm && puedeGestionarRecursos && (
           <div style={{ ...styles.formCard, backgroundColor: colors.card, borderColor: colors.border }}>
             <h3 style={{ ...styles.formTitle, color: colors.text }}>
               {editId ? '✏️ Editar Empleado' : '➕ Nuevo Empleado'}
@@ -122,6 +228,7 @@ function Recursos() {
                         color: colors.inputText, borderColor: colors.border }} />
                   </div>
                 ))}
+
                 <div style={styles.field}>
                   <label style={{ ...styles.label, color: colors.subtext }}>Disponibilidad</label>
                   <select name="disponibilidad" value={form.disponibilidad} onChange={handleChange}
@@ -132,6 +239,7 @@ function Recursos() {
                     <option value="VACACIONES">🏖️ Vacaciones</option>
                   </select>
                 </div>
+
                 <div style={styles.field}>
                   <label style={{ ...styles.label, color: colors.subtext }}>Nivel</label>
                   <select name="nivelExperiencia" value={form.nivelExperiencia} onChange={handleChange}
@@ -142,24 +250,87 @@ function Recursos() {
                     <option value="SENIOR">🌟 Senior</option>
                   </select>
                 </div>
+
+                {/* Campo para asignar uno o varios proyectos al recurso */}
+                <div style={{ ...styles.field, gridColumn: 'span 2' }}>
+                  <label style={{ ...styles.label, color: colors.subtext }}>
+                    Proyectos asignados
+                  </label>
+                  <div style={{ ...styles.projectChecks, borderColor: colors.border }}>
+                    {proyectos.length === 0 ? (
+                      <span style={{ color: colors.subtext }}>No hay proyectos disponibles</span>
+                    ) : proyectos.map(p => (
+                      <label key={p.id} style={{ ...styles.projectCheck, color: colors.text }}>
+                        <input
+                          type="checkbox"
+                          checked={(form.idProyectos || []).includes(p.id)}
+                          onChange={() => handleProyectoToggle(p.id)}
+                        />
+                        {p.nombre} ({p.estado})
+                      </label>
+                    ))}
+                  </div>
+                  <small style={{ color: colors.subtext, fontSize: '12px' }}>
+                    ID_PROYECTO guarda el primero: {form.idProyectos[0] || 'null'}
+                  </small>
+                </div>
               </div>
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
                 <button type="submit" style={styles.btnSuccess}>
-                  {editId ? '💾 Actualizar' : '✨ Crear Empleado'}
+                  {editId ? 'Guardar asignacion del empleado' : 'Crear empleado'}
                 </button>
               </div>
             </form>
           </div>
         )}
 
+        {/* Resumen de la relacion proyecto -> empleados */}
+        <div style={styles.assignmentSection}>
+          <h2 style={{ ...styles.sectionTitle, color: colors.text }}>Proyectos y empleados asignados</h2>
+          <div style={styles.assignmentGrid}>
+            {proyectos.length === 0 ? (
+              <div style={{ ...styles.assignmentCard, backgroundColor: colors.card, borderColor: colors.border, color: colors.subtext }}>
+                No hay proyectos cargados desde el BFF.
+              </div>
+            ) : proyectos.map(p => {
+              const asignados = getRecursosPorProyecto(p.id);
+              return (
+                <div key={p.id} style={{ ...styles.assignmentCard, backgroundColor: colors.card, borderColor: colors.border }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontWeight: '800', color: colors.text }}>{p.nombre}</div>
+                      <div style={{ fontSize: '12px', color: colors.subtext }}>Responsable: {p.responsable || 'Sin responsable'}</div>
+                    </div>
+                    <span style={styles.projectIdBadge}>ID {p.id}</span>
+                  </div>
+                  {asignados.length === 0 ? (
+                    <div style={{ fontSize: '13px', color: colors.subtext }}>Sin empleados asignados</div>
+                  ) : (
+                    <div style={styles.assignedPeople}>
+                      {asignados.map(r => (
+                        <span key={r.id} style={styles.assignedPersonBadge}>
+                          {r.nombre} {r.apellido}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Cards de empleados */}
         {recursos.length === 0 ? (
           <div style={{ ...styles.emptyState, backgroundColor: colors.card, color: colors.subtext }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>👥</div>
             <div style={{ fontSize: '18px', fontWeight: '600' }}>Sin empleados registrados</div>
-            {esAdmin && <div style={{ fontSize: '14px', marginTop: '8px', opacity: 0.7 }}>
-              Haz clic en "+ Nuevo Empleado" para comenzar
-            </div>}
+            {puedeGestionarRecursos && (
+              <div style={{ fontSize: '14px', marginTop: '8px', opacity: 0.7 }}>
+                Haz clic en "+ Nuevo Empleado" para comenzar
+              </div>
+            )}
           </div>
         ) : (
           <div style={styles.cardsGrid}>
@@ -167,10 +338,13 @@ function Recursos() {
               const disp = dispConfig[r.disponibilidad] || {};
               const nivel = nivelConfig[r.nivelExperiencia] || {};
               const avatarColor = getAvatarColor(r.nombre);
+              const nombresProyectos = getNombresProyectos(r);
               return (
-                <div key={r.id} style={{ ...styles.employeeCard, backgroundColor: colors.card,
+                <div key={r.id} style={{
+                  ...styles.employeeCard, backgroundColor: colors.card,
                   border: `1px solid ${colors.border}`,
-                  boxShadow: darkMode ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.06)' }}>
+                  boxShadow: darkMode ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.06)'
+                }}>
                   {/* Header de la card */}
                   <div style={{ ...styles.cardHeader, backgroundColor: colors.cardHeader,
                     borderBottom: `1px solid ${colors.border}` }}>
@@ -198,9 +372,17 @@ function Recursos() {
                         {r.email}
                       </span>
                     </div>
-                    <div style={{ fontSize: '13px', color: colors.subtext, marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', color: colors.subtext, marginBottom: '8px' }}>
                       🏢 {r.departamento}
                     </div>
+
+                    {/* Muestra siempre el proyecto para verificar la asignacion en pantalla */}
+                    <div style={{ fontSize: '13px', marginBottom: '8px',
+                      color: getIdsProyectos(r).length > 0 ? '#6366f1' : colors.subtext, fontWeight: '600',
+                      display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      Proyectos: {nombresProyectos}
+                    </div>
+
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       <span style={{ backgroundColor: `${disp.color}22`, color: disp.color,
                         padding: '4px 10px', borderRadius: '20px', fontSize: '11px',
@@ -215,16 +397,18 @@ function Recursos() {
                     </div>
                   </div>
 
-                  {/* Acciones */}
-                  {esAdmin && (
+                  {/* Acciones segun jerarquia: jefe edita, admin edita y elimina */}
+                  {puedeGestionarRecursos && (
                     <div style={{ ...styles.cardActions, borderTop: `1px solid ${colors.border}`,
                       backgroundColor: darkMode ? '#273344' : '#fafafa' }}>
                       <button onClick={() => handleEdit(r)} style={styles.btnEdit}>
                         <FiEdit2 size={13} /> Editar
                       </button>
-                      <button onClick={() => handleDelete(r.id)} style={styles.btnDelete}>
-                        <FiTrash2 size={13} /> Eliminar
-                      </button>
+                      {puedeEliminarRecursos && (
+                        <button onClick={() => handleDelete(r.id)} style={styles.btnDelete}>
+                          <FiTrash2 size={13} /> Eliminar
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -258,14 +442,43 @@ const styles = {
     borderTop: '4px solid #1a237e', border: '1px solid',
   },
   formTitle: { fontSize: '18px', fontWeight: '700', marginBottom: '20px' },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
+  formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '700', letterSpacing: '0.3px' },
   input: {
     padding: '10px 14px', borderRadius: '8px', border: '2px solid',
     fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box',
   },
-  cardsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '20px' },
+  toast: {
+    border: '1px solid', borderRadius: '10px', padding: '12px 14px',
+    fontSize: '14px', fontWeight: '800', marginBottom: '16px',
+  },
+  projectChecks: {
+    border: '2px solid', borderRadius: '8px', padding: '10px 12px',
+    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+    gap: '10px', minHeight: '44px',
+  },
+  projectCheck: {
+    display: 'flex', alignItems: 'center', gap: '8px',
+    fontSize: '14px', fontWeight: '600',
+  },
+  assignmentSection: { marginBottom: '24px' },
+  sectionTitle: { fontSize: '18px', fontWeight: '800', marginBottom: '12px' },
+  assignmentGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' },
+  assignmentCard: {
+    border: '1px solid', borderRadius: '12px', padding: '16px',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
+  },
+  projectIdBadge: {
+    backgroundColor: '#eff6ff', color: '#1d4ed8', borderRadius: '999px',
+    padding: '4px 9px', fontSize: '11px', fontWeight: '800', height: 'fit-content',
+  },
+  assignedPeople: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' },
+  assignedPersonBadge: {
+    backgroundColor: '#dcfce7', color: '#15803d', borderRadius: '999px',
+    padding: '5px 10px', fontSize: '12px', fontWeight: '700',
+  },
+  cardsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '20px' },
   employeeCard: { borderRadius: '16px', overflow: 'hidden', transition: 'transform 0.2s' },
   cardHeader: { display: 'flex', alignItems: 'center', gap: '14px', padding: '18px 20px' },
   avatar: {

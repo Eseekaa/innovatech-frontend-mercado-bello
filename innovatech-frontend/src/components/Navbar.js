@@ -76,7 +76,11 @@ function Navbar() {
           <div style={styles.avatar}>{username?.[0]?.toUpperCase()}</div>
           <div>
             <div style={styles.username}>{username}</div>
-            <div style={styles.userRol}>{rol === 'ADMIN' ? '👑 Admin' : '👤 Usuario'}</div>
+            <div style={styles.userRol}>
+              {rol === 'ADMIN' ? '👑 Admin' : 
+              rol === 'JEFE_PROYECTO' ? '🎯 Jefe de Proyecto' : 
+              '👤 Usuario'}
+            </div>
           </div>
         </div>
 
