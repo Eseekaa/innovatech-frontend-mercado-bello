@@ -1,80 +1,111 @@
-# 🎨 Innovatech Solutions — Frontend
+# Innovatech Solutions - Frontend
 
-Interfaz de usuario de la Plataforma Inteligente de Gestión de Proyectos y Recursos Humanos.
+Frontend de la Plataforma Inteligente de Gestion de Proyectos y Recursos Humanos.
 
-## 👥 Integrantes
-- Matías Mercado
-- Matías Bello
+La aplicacion esta desarrollada en React y consume el BFF del backend de Innovatech Solutions.
 
-## 📋 Descripción
-Aplicación frontend desarrollada en React que consume el BFF de Innovatech Solutions. Incluye autenticación JWT, control de roles, dashboard analítico y gestión completa de proyectos y recursos humanos.
+## Integrantes
 
-## ✨ Características
-- 🔐 Autenticación con JWT
-- 👑 Control de roles (ADMIN/USER)
-- 📊 Dashboard con estadísticas en tiempo real
-- 📋 CRUD completo de proyectos
-- 👥 CRUD completo de recursos humanos
-- 🌙 Modo oscuro/claro
-- 📱 Diseño responsive
+- Matias Mercado
+- Matias Bello
 
-## 🛠️ Tecnologías
-- React 18
+## Ubicacion de la app
+
+El codigo React esta dentro de la carpeta:
+
+```text
+innovatech-frontend
+```
+
+Estructura principal:
+
+```text
+innovatech-frontend-mercado-bello
+├── README.md
+└── innovatech-frontend
+    ├── public
+    ├── src
+    ├── Dockerfile
+    ├── nginx.conf
+    ├── package.json
+    └── README.md
+```
+
+## Funcionalidades
+
+- Login y registro de usuarios.
+- Autenticacion con JWT.
+- Control visual de permisos por rol.
+- Dashboard con resumen de proyectos, empleados y asignaciones.
+- Gestion de proyectos.
+- Gestion de recursos humanos.
+- Asignacion de empleados a uno o mas proyectos.
+- Visto bueno de proyectos y opcion para quitarlo.
+- Modo claro/oscuro.
+- Diseno responsivo para escritorio y celular.
+- Soporte para Docker.
+
+## Roles
+
+| Rol | Permisos en la interfaz |
+| --- | --- |
+| USUARIO | Visualiza informacion y da/quita visto bueno |
+| JEFE_PROYECTO | Crea/edita proyectos, crea/edita recursos y asigna empleados |
+| ADMIN | Tiene acceso completo, incluyendo eliminar proyectos y recursos |
+
+## Tecnologias
+
+- React
 - React Router DOM
 - Axios
 - React Icons
-- CSS-in-JS (estilos en línea)
+- CSS en `src/index.css`
+- Docker
+- nginx para publicar el build en contenedor
 
-## 🚀 Instalación y Ejecución
+## Ejecucion recomendada con Docker
 
-### Prerrequisitos
-- Node.js 18+
-- npm
+El Docker Compose principal esta en el repositorio backend. Para levantar todo el sistema se debe ejecutar desde:
 
-### Pasos
-
-**1. Instalar dependencias:**
-```bash
-cd innovatech-frontend
-npm install
+```powershell
+cd C:\Users\%USERNAME%\innovatech\innovatech-backend-mercado-bello
+docker compose up --build
 ```
 
-**2. Iniciar la aplicación:**
-```bash
+Luego abrir:
+
+```text
+http://localhost:3000
+```
+
+## Ejecucion manual
+
+```powershell
+cd C:\Users\Eseekaa\innovatech\innovatech-frontend-mercado-bello\innovatech-frontend
+npm install
 npm start
 ```
 
-**3. Abrir en el navegador:**
+Abrir:
+
+```text
 http://localhost:3000
-> ⚠️ El backend debe estar corriendo antes de iniciar el frontend.
+```
 
-## 📁 Estructura del Proyecto
-src/
-├── components/
-│   └── Navbar.js          # Barra de navegación con modo oscuro
-├── pages/
-│   ├── Login.js           # Página de inicio de sesión
-│   ├── Register.js        # Página de registro
-│   ├── Dashboard.js       # Dashboard con estadísticas
-│   ├── Proyectos.js       # Gestión de proyectos
-│   └── Recursos.js        # Gestión de recursos humanos
-├── services/
-│   └── api.js             # Servicios HTTP con Axios
-└── App.js                 # Rutas y contexto del tema
+Importante: para usar la aplicacion completa, el backend debe estar corriendo.
 
-## 🔐 Roles de Usuario
-| Rol | Permisos |
-|-----|----------|
-| ADMIN | Ver, crear, editar y eliminar proyectos y empleados |
-| USER | Solo visualización |
+## Conexion con backend
 
-## 🌐 Conexión con el Backend
-El frontend se conecta al BFF en:
-- **Casa:** http://localhost:8080/api/bff
-- **Duoc:** http://localhost:8084/api/bff
-- **Autenticación:** http://localhost:8083/api/auth
+El frontend consume:
 
-## 🌿 Estrategia de Branching
-Se utilizó **GitHub Flow**:
-- `main` — rama principal con código estable
-- `feature/frontend-matias-bello` — desarrollo del frontend
+```text
+Auth: http://localhost:8083/api/auth
+BFF:  http://localhost:8084/api/bff
+```
+
+## Branching
+
+Se uso GitHub Flow:
+
+- `main`: version estable.
+- `feature/frontend-matias-bello`: desarrollo del frontend.

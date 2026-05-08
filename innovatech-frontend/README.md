@@ -1,70 +1,89 @@
-# Getting Started with Create React App
+# Innovatech Solutions - App React
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Aplicacion web de Innovatech Solutions. Permite usar el sistema de gestion de proyectos y recursos humanos desde el navegador.
 
-## Available Scripts
+## Que incluye
 
-In the project directory, you can run:
+- Pantalla de login.
+- Pantalla de registro.
+- Navbar con sesion activa, rol y cambio de tema.
+- Dashboard con resumen general.
+- Vista de proyectos.
+- Vista de recursos humanos.
+- Mensajes de exito y error.
+- Diseno responsivo para escritorio y celular.
 
-### `npm start`
+## Roles en frontend
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+El frontend lee el rol guardado despues del login y muestra acciones segun la jerarquia:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+| Rol | Acciones |
+| --- | --- |
+| USUARIO | Ver informacion y dar/quitar visto bueno |
+| JEFE_PROYECTO | Crear/editar proyectos y recursos, asignar empleados |
+| ADMIN | Permisos completos, incluyendo eliminar |
 
-### `npm test`
+## Estructura
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```text
+src
+├── components
+│   └── Navbar.js
+├── pages
+│   ├── Dashboard.js
+│   ├── Login.js
+│   ├── Proyectos.js
+│   ├── Recursos.js
+│   └── Register.js
+├── services
+│   └── api.js
+├── App.js
+└── index.css
+```
 
-### `npm run build`
+## Variables importantes
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+En `src/services/api.js` se definen las URLs usadas por Axios:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```text
+Auth: http://localhost:8083/api/auth
+BFF:  http://localhost:8084/api/bff
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Ejecutar manualmente
 
-### `npm run eject`
+```powershell
+npm install
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Abrir:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```text
+http://localhost:3000
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Construir version de produccion
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```powershell
+npm run build
+```
 
-## Learn More
+## Ejecutar con Docker
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Normalmente no se ejecuta desde esta carpeta, sino desde el backend:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```powershell
+cd C:\Users\%USERNAME%\innovatech\innovatech-backend-mercado-bello
+docker compose up --build
+```
 
-### Code Splitting
+Docker construye esta app y la publica con nginx en:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```text
+http://localhost:3000
+```
 
-### Analyzing the Bundle Size
+## Nota
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+El frontend depende del backend. Si el BFF o ms-auth no estan corriendo, login, dashboard, proyectos y recursos no podran cargar datos.
