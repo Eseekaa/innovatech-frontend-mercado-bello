@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Proyectos from './pages/Proyectos';
 import Recursos from './pages/Recursos';
+import Tareas from './pages/Tareas';
 
 // Context del tema: permite que cualquier componente sepa si está en modo oscuro
 // createContext crea un "canal" global de comunicación entre componentes
@@ -47,6 +48,7 @@ function App() {
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/proyectos" element={<PrivateRoute><Proyectos /></PrivateRoute>} />
             <Route path="/recursos" element={<PrivateRoute><Recursos /></PrivateRoute>} />
+            <Route path="/tareas" element={<PrivateRoute><Tareas /></PrivateRoute>} />
           </Routes>
         </BrowserRouter>
       </div>

@@ -69,6 +69,16 @@ function Dashboard() {
   const junior = dashboard.recursos.filter(r => r.nivelExperiencia === 'JUNIOR').length;
   const semiSenior = dashboard.recursos.filter(r => r.nivelExperiencia === 'SEMI_SENIOR').length;
   const senior = dashboard.recursos.filter(r => r.nivelExperiencia === 'SENIOR').length;
+  // tareaKpis viene desde el BFF. Si ms-tareas esta vacio o no responde,
+  // usamos valores en 0 para que el dashboard no se caiga durante la demo.
+  const tareaKpis = dashboard.tareaKpis || {};
+  const totalTareas = tareaKpis.totalTareas || 0;
+  const tareasPendientes = tareaKpis.tareasPendientes || 0;
+  const tareasEnProgreso = tareaKpis.tareasEnProgreso || 0;
+  const tareasCompletadas = tareaKpis.tareasCompletadas || 0;
+  const tareasBloqueadas = tareaKpis.tareasBloqueadas || 0;
+  const tareasVencidas = tareaKpis.tareasVencidas || 0;
+  const avancePromedio = tareaKpis.avancePromedio || 0;
   const rolInfo = getRolInfo(rol);
 
   const getIdsProyectos = (recurso) => {
@@ -118,6 +128,8 @@ function Dashboard() {
         <div style={styles.kpiGrid}>
           <KpiCard icon={<FiFolder size={24} />} label="Total Proyectos"
             value={dashboard.totalProyectos} color="#6366f1" darkMode={darkMode} />
+          <KpiCard icon={<FiClock size={24} />} label="Total Tareas"
+            value={totalTareas} color="#8b5cf6" darkMode={darkMode} />
           <KpiCard icon={<FiTrendingUp size={24} />} label="Proyectos Activos"
             value={proyectosActivos} color="#22c55e" darkMode={darkMode} />
           <KpiCard icon={<FiUsers size={24} />} label="Total Empleados"
@@ -133,6 +145,20 @@ function Dashboard() {
           <StatCard label="En Pausa" value={proyectosEnPausa} color="#f59e0b" bg={darkMode ? '#78350f22' : '#fffbeb'} darkMode={darkMode} />
           <StatCard label="Completados" value={proyectosCompletados} color="#3b82f6" bg={darkMode ? '#1e3a5f22' : '#eff6ff'} darkMode={darkMode} />
           <StatCard label="Cancelados" value={proyectosCancelados} color="#ef4444" bg={darkMode ? '#7f1d1d22' : '#fef2f2'} darkMode={darkMode} />
+        </div>
+
+        {/* KPIs de tareas para EV3: muestran avance real del trabajo operativo */}
+        <SectionTitle title="Monitoreo de Tareas" total={totalTareas} colors={colors} />
+        <div style={styles.grid4}>
+          <StatCard label="Pendientes" value={tareasPendientes} color="#f59e0b" bg={darkMode ? '#78350f22' : '#fffbeb'} darkMode={darkMode} />
+          <StatCard label="En Progreso" value={tareasEnProgreso} color="#3b82f6" bg={darkMode ? '#1e3a5f22' : '#eff6ff'} darkMode={darkMode} />
+          <StatCard label="Completadas" value={tareasCompletadas} color="#22c55e" bg={darkMode ? '#14532d22' : '#f0fdf4'} darkMode={darkMode} />
+          <StatCard label="Bloqueadas" value={tareasBloqueadas} color="#ef4444" bg={darkMode ? '#7f1d1d22' : '#fef2f2'} darkMode={darkMode} />
+        </div>
+        <div style={styles.grid3}>
+          <StatCard label="Vencidas" value={tareasVencidas} color="#ef4444" bg={darkMode ? '#7f1d1d22' : '#fef2f2'} darkMode={darkMode} />
+          <StatCard label="Avance Promedio" value={`${avancePromedio}%`} color="#8b5cf6" bg={darkMode ? '#4c1d9522' : '#faf5ff'} darkMode={darkMode} />
+          <StatCard label="Tareas Registradas" value={totalTareas} color="#6366f1" bg={darkMode ? '#312e8122' : '#eef2ff'} darkMode={darkMode} />
         </div>
 
         {/* Recursos por disponibilidad */}

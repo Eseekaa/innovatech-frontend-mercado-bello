@@ -92,4 +92,32 @@ export const recursosService = {
   obtenerPorProyecto: (idProyecto) => api.get(`/recursos/proyecto/${idProyecto}`),
 };
 
+// Servicio de tareas - EV3
+// Todas las tareas se gestionan pasando por el BFF, que internamente llama a ms-tareas.
+export const tareasService = {
+  // GET /api/bff/tareas - lista todas las tareas.
+  getAll: () => api.get('/tareas'),
+
+  // GET /api/bff/tareas/kpis - resumen KPI para dashboard y reportes.
+  getKpis: () => api.get('/tareas/kpis'),
+
+  // GET /api/bff/tareas/proyecto/{proyectoId} - tareas de un proyecto.
+  getByProyecto: (proyectoId) => api.get(`/tareas/proyecto/${proyectoId}`),
+
+  // GET /api/bff/tareas/responsable/{responsableId} - tareas asignadas a un empleado.
+  getByResponsable: (responsableId) => api.get(`/tareas/responsable/${responsableId}`),
+
+  // POST /api/bff/tareas - crea una nueva tarea.
+  create: (data) => api.post('/tareas', data),
+
+  // PUT /api/bff/tareas/{id} - actualiza toda la tarea.
+  update: (id, data) => api.put(`/tareas/${id}`, data),
+
+  // PATCH /api/bff/tareas/{id}/estado - actualiza solo estado y avance.
+  updateEstado: (id, data) => api.patch(`/tareas/${id}/estado`, data),
+
+  // DELETE /api/bff/tareas/{id} - elimina una tarea.
+  delete: (id) => api.delete(`/tareas/${id}`),
+};
+
 export default api;

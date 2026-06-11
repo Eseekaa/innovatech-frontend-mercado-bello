@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../App';
-import { FiSun, FiMoon, FiLogOut, FiGrid, FiFolder, FiUsers } from 'react-icons/fi';
+import { FiSun, FiMoon, FiLogOut, FiGrid, FiFolder, FiUsers, FiCheckSquare } from 'react-icons/fi';
 
 // Navbar profesional con modo oscuro y íconos
 // useTheme() obtiene el estado del tema desde el Context global
@@ -62,6 +62,13 @@ function Navbar() {
           <FiUsers size={16} />
           Recursos
         </Link>
+        <Link to="/tareas" style={{
+          ...styles.link,
+          ...(isActive('/tareas') ? styles.activeLink : {})
+        }}>
+          <FiCheckSquare size={16} />
+          Tareas
+        </Link>
       </div>
 
       {/* Sección derecha: usuario, modo oscuro, logout */}
@@ -96,21 +103,23 @@ function Navbar() {
 
 const styles = {
   nav: {
-    padding: '0 24px',
+    padding: '10px 24px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    height: '64px',
+    gap: '14px',
+    minHeight: '64px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
     position: 'sticky',
     top: 0,
     zIndex: 1000,
+    flexWrap: 'wrap',
   },
-  brand: { display: 'flex', alignItems: 'center', gap: '12px' },
+  brand: { display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 },
   brandIcon: { fontSize: '28px' },
   brandText: { color: 'white', fontSize: '17px', fontWeight: '700', display: 'block' },
   brandSub: { color: 'rgba(255,255,255,0.55)', fontSize: '11px', display: 'block' },
-  links: { display: 'flex', alignItems: 'center', gap: '4px' },
+  links: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', flexWrap: 'wrap' },
   link: {
     color: 'rgba(255,255,255,0.75)',
     textDecoration: 'none',
@@ -128,7 +137,7 @@ const styles = {
     color: 'white',
     fontWeight: '700',
   },
-  rightSection: { display: 'flex', alignItems: 'center', gap: '12px' },
+  rightSection: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', flexWrap: 'wrap' },
   themeBtn: {
     background: 'rgba(255,255,255,0.12)',
     border: '1px solid rgba(255,255,255,0.2)',
