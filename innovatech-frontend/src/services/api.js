@@ -101,6 +101,12 @@ export const tareasService = {
   // GET /api/bff/tareas/kpis - resumen KPI para dashboard y reportes.
   getKpis: () => api.get('/tareas/kpis'),
 
+  // GET /api/bff/tareas/kpis/proyectos - reporte agrupado por proyecto.
+  getKpisPorProyecto: () => api.get('/tareas/kpis/proyectos'),
+
+  // GET /api/bff/tareas/kpis/responsables - reporte agrupado por empleado responsable.
+  getKpisPorResponsable: () => api.get('/tareas/kpis/responsables'),
+
   // GET /api/bff/tareas/proyecto/{proyectoId} - tareas de un proyecto.
   getByProyecto: (proyectoId) => api.get(`/tareas/proyecto/${proyectoId}`),
 

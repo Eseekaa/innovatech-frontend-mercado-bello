@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardService } from '../services/api';
+import { dashboardService, tareasService } from '../services/api';
 import Navbar from '../components/Navbar';
 import { useTheme } from '../App';
 import { FiFolder, FiUsers, FiTrendingUp, FiClock, FiShield } from 'react-icons/fi';
 
 function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
+  const [kpisPorProyecto, setKpisPorProyecto] = useState([]);
+  const [kpisPorResponsable, setKpisPorResponsable] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { darkMode } = useTheme(); // Lee el tema global
@@ -28,8 +30,16 @@ function Dashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await dashboardService.getDashboard();
-        setDashboard(response.data);
+        // Carga principal del dashboard y reportes EV3 en paralelo.
+        // Promise.all permite que las tres peticiones salgan al mismo tiempo.
+        const [dashboardResponse, proyectosKpiResponse, responsablesKpiResponse] = await Promise.all([
+          dashboardService.getDashboard(),
+          tareasService.getKpisPorProyecto(),
+          tareasService.getKpisPorResponsable(),
+        ]);
+        setDashboard(dashboardResponse.data);
+        setKpisPorProyecto(proyectosKpiResponse.data || []);
+        setKpisPorResponsable(responsablesKpiResponse.data || []);
       } catch (err) {
         setError('Error al cargar el dashboard.');
       } finally {
@@ -80,6 +90,8 @@ function Dashboard() {
   const tareasVencidas = tareaKpis.tareasVencidas || 0;
   const avancePromedio = tareaKpis.avancePromedio || 0;
   const rolInfo = getRolInfo(rol);
+  const proyectosPorId = new Map(dashboard.proyectos.map(proyecto => [Number(proyecto.id), proyecto]));
+  const recursosPorId = new Map(dashboard.recursos.map(recurso => [Number(recurso.id), recurso]));
 
   const getIdsProyectos = (recurso) => {
     // idProyectos es la relacion multiple; idProyecto queda como respaldo antiguo.
@@ -159,6 +171,47 @@ function Dashboard() {
           <StatCard label="Vencidas" value={tareasVencidas} color="#ef4444" bg={darkMode ? '#7f1d1d22' : '#fef2f2'} darkMode={darkMode} />
           <StatCard label="Avance Promedio" value={`${avancePromedio}%`} color="#8b5cf6" bg={darkMode ? '#4c1d9522' : '#faf5ff'} darkMode={darkMode} />
           <StatCard label="Tareas Registradas" value={totalTareas} color="#6366f1" bg={darkMode ? '#312e8122' : '#eef2ff'} darkMode={darkMode} />
+        </div>
+
+        {/* Reportes EV3: resumen por proyecto y por responsable para defensa. */}
+        <SectionTitle title="Reportes KPI por Proyecto" total={kpisPorProyecto.length} colors={colors} />
+        <div style={styles.reportGrid}>
+          {kpisPorProyecto.length === 0 ? (
+            <EmptyReport colors={colors} text="Aun no hay tareas asociadas a proyectos." />
+          ) : kpisPorProyecto.map(kpi => {
+            const proyecto = proyectosPorId.get(Number(kpi.proyectoId));
+            return (
+              <ReportCard
+                key={kpi.proyectoId}
+                title={proyecto ? proyecto.nombre : `Proyecto ID ${kpi.proyectoId}`}
+                subtitle={`Proyecto ${kpi.proyectoId}`}
+                kpi={kpi}
+                colors={colors}
+                darkMode={darkMode}
+              />
+            );
+          })}
+        </div>
+
+        <SectionTitle title="Reportes KPI por Responsable" total={kpisPorResponsable.length} colors={colors} />
+        <div style={styles.reportGrid}>
+          {kpisPorResponsable.length === 0 ? (
+            <EmptyReport colors={colors} text="Aun no hay responsables asignados a tareas." />
+          ) : kpisPorResponsable.map(kpi => {
+            const recurso = recursosPorId.get(Number(kpi.responsableId));
+            const nombre = recurso ? `${recurso.nombre} ${recurso.apellido}` : `Responsable ID ${kpi.responsableId}`;
+            const cargo = recurso ? recurso.cargo : `Empleado ${kpi.responsableId}`;
+            return (
+              <ReportCard
+                key={kpi.responsableId}
+                title={nombre}
+                subtitle={cargo}
+                kpi={kpi}
+                colors={colors}
+                darkMode={darkMode}
+              />
+            );
+          })}
         </div>
 
         {/* Recursos por disponibilidad */}
@@ -315,6 +368,58 @@ function StatCard({ label, value, color, bg, darkMode }) {
   );
 }
 
+// Tarjeta compacta de reporte KPI usada para proyecto y responsable.
+function ReportCard({ title, subtitle, kpi, colors, darkMode }) {
+  const completadas = kpi.tareasCompletadas || 0;
+  const total = kpi.totalTareas || 0;
+  const bloqueadas = kpi.tareasBloqueadas || 0;
+  const vencidas = kpi.tareasVencidas || 0;
+  const avance = kpi.avancePromedio || 0;
+  const porcentaje = kpi.porcentajeCompletadas || 0;
+
+  return (
+    <div style={{ ...styles.reportCard, backgroundColor: colors.card, borderColor: colors.border }}>
+      <div style={styles.reportHeader}>
+        <div>
+          <div style={{ ...styles.reportTitle, color: colors.text }}>{title}</div>
+          <div style={{ ...styles.reportSubtitle, color: colors.subtext }}>{subtitle}</div>
+        </div>
+        <span style={{ ...styles.reportBadge, backgroundColor: darkMode ? '#1d4ed822' : '#eff6ff', color: '#3b82f6' }}>
+          {total} tarea(s)
+        </span>
+      </div>
+      <div style={styles.progressTrack}>
+        <div style={{ ...styles.progressFill, width: `${Math.min(avance, 100)}%` }} />
+      </div>
+      <div style={{ ...styles.reportProgressText, color: colors.subtext }}>
+        Avance promedio: <strong style={{ color: colors.text }}>{avance}%</strong> | Completadas: <strong style={{ color: colors.text }}>{porcentaje}%</strong>
+      </div>
+      <div style={styles.reportMetrics}>
+        <Metric label="Completadas" value={completadas} color="#22c55e" />
+        <Metric label="Bloqueadas" value={bloqueadas} color="#ef4444" />
+        <Metric label="Vencidas" value={vencidas} color="#f59e0b" />
+      </div>
+    </div>
+  );
+}
+
+function Metric({ label, value, color }) {
+  return (
+    <div style={styles.metricBox}>
+      <div style={{ color, fontWeight: 800, fontSize: '18px' }}>{value}</div>
+      <div style={styles.metricLabel}>{label}</div>
+    </div>
+  );
+}
+
+function EmptyReport({ colors, text }) {
+  return (
+    <div style={{ ...styles.emptyReport, backgroundColor: colors.card, borderColor: colors.border, color: colors.subtext }}>
+      {text}
+    </div>
+  );
+}
+
 // Componente título de sección
 function SectionTitle({ title, total, colors }) {
   return (
@@ -394,6 +499,19 @@ const styles = {
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '8px' },
   grid4: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '14px', marginBottom: '8px' },
   grid3: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '8px' },
+  reportGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', marginBottom: '8px' },
+  reportCard: { border: '1px solid', borderRadius: '14px', padding: '16px', boxShadow: '0 4px 18px rgba(0,0,0,0.06)' },
+  reportHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' },
+  reportTitle: { fontSize: '15px', fontWeight: '800', marginBottom: '4px' },
+  reportSubtitle: { fontSize: '12px', fontWeight: '600' },
+  reportBadge: { padding: '5px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap' },
+  progressTrack: { width: '100%', height: '8px', borderRadius: '999px', backgroundColor: '#94a3b855', overflow: 'hidden', marginBottom: '8px' },
+  progressFill: { height: '100%', borderRadius: '999px', backgroundColor: '#22c55e' },
+  reportProgressText: { fontSize: '12px', marginBottom: '12px' },
+  reportMetrics: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' },
+  metricBox: { borderRadius: '10px', padding: '10px', backgroundColor: 'rgba(148, 163, 184, 0.12)', textAlign: 'center' },
+  metricLabel: { fontSize: '11px', color: '#94a3b8', fontWeight: '700', marginTop: '2px' },
+  emptyReport: { border: '1px solid', borderRadius: '14px', padding: '18px', fontSize: '14px' },
   assignmentGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', marginBottom: '8px' },
   assignmentCard: {
     border: '1px solid', borderRadius: '14px', padding: '16px',
