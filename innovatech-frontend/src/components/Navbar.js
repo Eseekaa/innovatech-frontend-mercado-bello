@@ -1,17 +1,34 @@
-import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  FiCheckSquare,
+  FiFolder,
+  FiGrid,
+  FiLayers,
+  FiLogOut,
+  FiMenu,
+  FiMoon,
+  FiSun,
+  FiUsers,
+  FiX,
+} from 'react-icons/fi';
 import { useTheme } from '../App';
-import { FiSun, FiMoon, FiLogOut, FiGrid, FiFolder, FiUsers, FiCheckSquare } from 'react-icons/fi';
+import './Navbar.css';
 
-// Navbar profesional con modo oscuro y íconos
-// useTheme() obtiene el estado del tema desde el Context global
+const navigation = [
+  { path: '/dashboard', label: 'Dashboard', icon: FiGrid },
+  { path: '/proyectos', label: 'Proyectos', icon: FiFolder },
+  { path: '/recursos', label: 'Recursos', icon: FiUsers },
+  { path: '/tareas', label: 'Tareas', icon: FiCheckSquare },
+];
+
 function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { darkMode, toggleDarkMode } = useTheme(); // Lee el tema global
-
-  const username = localStorage.getItem('username');
-  const rol = localStorage.getItem('rol');
+  const { darkMode, toggleDarkMode } = useTheme();
+  const username = localStorage.getItem('username') || 'Usuario';
+  const rol = localStorage.getItem('rol') || 'USUARIO';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -20,160 +37,78 @@ function Navbar() {
     navigate('/login');
   };
 
-  // Verifica si el link corresponde a la página actual
-  const isActive = (path) => location.pathname === path;
-
-  // Colores que cambian según el tema
-  const bg = darkMode
-    ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
-    : 'linear-gradient(135deg, #1a237e 0%, #283593 50%, #1565c0 100%)';
+  const roleLabel = rol === 'ADMIN'
+    ? 'Administrador'
+    : rol === 'JEFE_PROYECTO'
+      ? 'Jefe de Proyecto'
+      : 'Usuario';
 
   return (
-    <nav style={{ ...styles.nav, background: bg }}>
-      {/* Logo */}
-      <div style={styles.brand}>
-        <span style={styles.brandIcon}>🏢</span>
-        <div>
-          <span style={styles.brandText}>Innovatech Solutions</span>
-          <span style={styles.brandSub}>Plataforma de Gestión</span>
-        </div>
-      </div>
+    <header className="topbar">
+      <div className="topbar__inner">
+        <Link to="/dashboard" className="topbar__brand" aria-label="Ir al dashboard">
+          <span className="topbar__brand-mark"><FiLayers size={21} /></span>
+          <span className="topbar__brand-copy">
+            <strong>Innovatech</strong>
+            <small>Gestión de proyectos</small>
+          </span>
+        </Link>
 
-      {/* Links de navegación con íconos */}
-      <div style={styles.links}>
-        <Link to="/dashboard" style={{
-          ...styles.link,
-          ...(isActive('/dashboard') ? styles.activeLink : {})
-        }}>
-          <FiGrid size={16} />
-          Dashboard
-        </Link>
-        <Link to="/proyectos" style={{
-          ...styles.link,
-          ...(isActive('/proyectos') ? styles.activeLink : {})
-        }}>
-          <FiFolder size={16} />
-          Proyectos
-        </Link>
-        <Link to="/recursos" style={{
-          ...styles.link,
-          ...(isActive('/recursos') ? styles.activeLink : {})
-        }}>
-          <FiUsers size={16} />
-          Recursos
-        </Link>
-        <Link to="/tareas" style={{
-          ...styles.link,
-          ...(isActive('/tareas') ? styles.activeLink : {})
-        }}>
-          <FiCheckSquare size={16} />
-          Tareas
-        </Link>
-      </div>
-
-      {/* Sección derecha: usuario, modo oscuro, logout */}
-      <div style={styles.rightSection}>
-        {/* Botón modo oscuro/claro */}
-        <button onClick={toggleDarkMode} style={styles.themeBtn} title="Cambiar tema">
-          {darkMode ? <FiSun size={18} color="#fbbf24" /> : <FiMoon size={18} color="white" />}
+        <button
+          type="button"
+          className="topbar__menu-button"
+          onClick={() => setMenuOpen(open => !open)}
+          aria-label={menuOpen ? 'Cerrar navegación' : 'Abrir navegación'}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
         </button>
 
-        {/* Info del usuario */}
-        <div style={styles.userInfo}>
-          <div style={styles.avatar}>{username?.[0]?.toUpperCase()}</div>
-          <div>
-            <div style={styles.username}>{username}</div>
-            <div style={styles.userRol}>
-              {rol === 'ADMIN' ? '👑 Admin' : 
-              rol === 'JEFE_PROYECTO' ? '🎯 Jefe de Proyecto' : 
-              '👤 Usuario'}
+        <div className={`topbar__content ${menuOpen ? 'topbar__content--open' : ''}`}>
+          <nav className="topbar__nav" aria-label="Navegación principal">
+            {navigation.map(({ path, label, icon: Icon }) => (
+              <Link
+                key={path}
+                to={path}
+                className={`topbar__link ${location.pathname === path ? 'topbar__link--active' : ''}`}
+                onClick={() => setMenuOpen(false)}
+              >
+                <Icon size={17} />
+                <span>{label}</span>
+              </Link>
+            ))}
+          </nav>
+
+          <div className="topbar__actions">
+            <button
+              type="button"
+              className="topbar__icon-button"
+              onClick={toggleDarkMode}
+              title={darkMode ? 'Usar modo claro' : 'Usar modo oscuro'}
+              aria-label={darkMode ? 'Usar modo claro' : 'Usar modo oscuro'}
+            >
+              {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+            </button>
+
+            <div className="topbar__user">
+              <span className="topbar__avatar" aria-hidden="true">
+                {username.charAt(0).toUpperCase()}
+              </span>
+              <span className="topbar__user-copy">
+                <strong>{username}</strong>
+                <small>{roleLabel}</small>
+              </span>
             </div>
+
+            <button type="button" className="topbar__logout" onClick={handleLogout}>
+              <FiLogOut size={17} />
+              <span>Salir</span>
+            </button>
           </div>
         </div>
-
-        {/* Botón cerrar sesión */}
-        <button onClick={handleLogout} style={styles.logoutBtn} title="Cerrar sesión">
-          <FiLogOut size={16} />
-          Salir
-        </button>
       </div>
-    </nav>
+    </header>
   );
 }
-
-const styles = {
-  nav: {
-    padding: '10px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '14px',
-    minHeight: '64px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 1000,
-    flexWrap: 'wrap',
-  },
-  brand: { display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 },
-  brandIcon: { fontSize: '28px' },
-  brandText: { color: 'white', fontSize: '17px', fontWeight: '700', display: 'block' },
-  brandSub: { color: 'rgba(255,255,255,0.55)', fontSize: '11px', display: 'block' },
-  links: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', flexWrap: 'wrap' },
-  link: {
-    color: 'rgba(255,255,255,0.75)',
-    textDecoration: 'none',
-    fontSize: '14px',
-    fontWeight: '500',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    transition: 'all 0.2s',
-  },
-  activeLink: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    color: 'white',
-    fontWeight: '700',
-  },
-  rightSection: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', flexWrap: 'wrap' },
-  themeBtn: {
-    background: 'rgba(255,255,255,0.12)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    padding: '8px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s',
-  },
-  userInfo: { display: 'flex', alignItems: 'center', gap: '10px' },
-  avatar: {
-    width: '36px', height: '36px',
-    background: 'rgba(255,255,255,0.2)',
-    borderRadius: '50%',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: 'white', fontWeight: '800', fontSize: '15px',
-    border: '2px solid rgba(255,255,255,0.35)',
-  },
-  username: { color: 'white', fontSize: '14px', fontWeight: '600' },
-  userRol: { color: 'rgba(255,255,255,0.55)', fontSize: '11px' },
-  logoutBtn: {
-    background: 'rgba(255,255,255,0.12)',
-    color: 'white',
-    border: '1px solid rgba(255,255,255,0.2)',
-    padding: '8px 14px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '600',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    transition: 'all 0.2s',
-  },
-};
 
 export default Navbar;

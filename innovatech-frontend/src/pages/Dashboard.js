@@ -10,7 +10,6 @@ import {
 } from 'react-icons/fi';
 import { dashboardService, tareasService } from '../services/api';
 import Navbar from '../components/Navbar';
-import { useTheme } from '../App';
 
 function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
@@ -18,19 +17,18 @@ function Dashboard() {
   const [kpisPorResponsable, setKpisPorResponsable] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { darkMode } = useTheme();
   const username = localStorage.getItem('username') || 'usuario';
   const rol = localStorage.getItem('rol') || 'USUARIO';
 
   const colors = {
-    bg: darkMode ? '#0f172a' : '#f4f7fb',
-    card: darkMode ? '#172033' : '#ffffff',
-    panel: darkMode ? '#111827' : '#f8fafc',
-    text: darkMode ? '#f8fafc' : '#0f172a',
-    subtext: darkMode ? '#a5b4c8' : '#64748b',
-    border: darkMode ? '#334155' : '#dbe4ef',
-    tableHead: darkMode ? '#0b1220' : '#eef4fb',
-    row: darkMode ? '#172033' : '#ffffff',
+    bg: 'var(--app-bg)',
+    card: 'var(--surface)',
+    panel: 'var(--surface-subtle)',
+    text: 'var(--text-primary)',
+    subtext: 'var(--text-secondary)',
+    border: 'var(--border)',
+    tableHead: 'var(--surface-subtle)',
+    row: 'var(--surface)',
   };
 
   useEffect(() => {
@@ -58,7 +56,7 @@ function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+      <div className="app-page" style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
         <Navbar />
         <div style={styles.centerScreen}>Cargando dashboard...</div>
       </div>
@@ -67,7 +65,7 @@ function Dashboard() {
 
   if (error || !dashboard) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+      <div className="app-page" style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
         <Navbar />
         <div style={styles.centerScreen}>
           <FiAlertTriangle size={42} color="#ef4444" />
@@ -116,9 +114,9 @@ function Dashboard() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+    <div className="app-page" style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       <Navbar />
-      <main style={styles.container}>
+      <main className="app-main page-enter" style={styles.container}>
         <section style={{ ...styles.hero, backgroundColor: colors.card, borderColor: colors.border }}>
           <div>
             <h1 style={{ ...styles.title, color: colors.text }}>Panel Ejecutivo</h1>
@@ -143,10 +141,10 @@ function Dashboard() {
         </section>
 
         <section style={styles.summaryGrid}>
-          <MetricCard icon={<FiFolder />} label="Proyectos" value={dashboard.totalProyectos || proyectos.length} detail={`${proyectosActivos} activos`} color="#6366f1" colors={colors} />
-          <MetricCard icon={<FiUsers />} label="Empleados" value={dashboard.totalRecursos || recursos.length} detail={`${recursosDisponibles} disponibles`} color="#0ea5e9" colors={colors} />
-          <MetricCard icon={<FiActivity />} label="Tareas" value={totalTareas} detail={`${tareasEnProgreso} en progreso`} color="#f59e0b" colors={colors} />
-          <MetricCard icon={<FiTrendingUp />} label="Avance tareas" value={`${avancePromedio}%`} detail={`${tareasAprobadas} aprobadas`} color="#22c55e" colors={colors} />
+          <MetricCard icon={<FiFolder />} label="Proyectos" value={dashboard.totalProyectos || proyectos.length} detail={`${proyectosActivos} activos`} color="var(--primary)" colors={colors} />
+          <MetricCard icon={<FiUsers />} label="Empleados" value={dashboard.totalRecursos || recursos.length} detail={`${recursosDisponibles} disponibles`} color="var(--info)" colors={colors} />
+          <MetricCard icon={<FiActivity />} label="Tareas" value={totalTareas} detail={`${tareasEnProgreso} en progreso`} color="var(--warning)" colors={colors} />
+          <MetricCard icon={<FiTrendingUp />} label="Avance tareas" value={`${avancePromedio}%`} detail={`${tareasAprobadas} aprobadas`} color="var(--success)" colors={colors} />
         </section>
 
         <section style={styles.twoColumns}>
@@ -159,7 +157,7 @@ function Dashboard() {
             <ProgressRow label="Bloqueadas o vencidas" value={tareasBloqueadas + tareasVencidas} total={totalTareas} color="#ef4444" colors={colors} />
           </Panel>
 
-          <Panel title="Gestion de proyectos y equipo" subtitle="Resumen operativo para decisiones" colors={colors}>
+          <Panel title="Gestión de proyectos y equipo" subtitle="Resumen operativo para decisiones" colors={colors}>
             <div style={styles.compactGrid}>
               <SmallStat label="Activos" value={proyectosActivos} color="#22c55e" colors={colors} />
               <SmallStat label="En pausa" value={proyectosPausa} color="#f59e0b" colors={colors} />
@@ -178,10 +176,10 @@ function Dashboard() {
 
         <SectionHeader title="Reportes KPI" subtitle="Seguimiento por proyecto y responsable" colors={colors} />
         <section style={styles.reportLayout}>
-          <Panel title="Por proyecto" subtitle="Avance, aprobacion y bloqueos" colors={colors}>
+          <Panel title="Por proyecto" subtitle="Avance, aprobación y bloqueos" colors={colors}>
             <div style={styles.reportStack}>
               {kpisPorProyecto.length === 0 ? (
-                <EmptyState text="Aun no hay tareas asociadas a proyectos." colors={colors} />
+                <EmptyState text="Aún no hay tareas asociadas a proyectos." colors={colors} />
               ) : kpisPorProyecto.map(kpi => {
                 const proyecto = proyectosPorId.get(Number(kpi.proyectoId));
                 return (
@@ -200,7 +198,7 @@ function Dashboard() {
           <Panel title="Por responsable" subtitle="Carga y desempeno del equipo" colors={colors}>
             <div style={styles.reportStack}>
               {kpisPorResponsable.length === 0 ? (
-                <EmptyState text="Aun no hay responsables asignados a tareas." colors={colors} />
+                <EmptyState text="Aún no hay responsables asignados a tareas." colors={colors} />
               ) : kpisPorResponsable.map(kpi => {
                 const recurso = recursosPorId.get(Number(kpi.responsableId));
                 return (
@@ -217,7 +215,7 @@ function Dashboard() {
           </Panel>
         </section>
 
-        <SectionHeader title="Asignaciones" subtitle="Relacion entre proyectos y empleados" colors={colors} />
+        <SectionHeader title="Asignaciones" subtitle="Relación entre proyectos y empleados" colors={colors} />
         <section style={styles.assignmentGrid}>
           {proyectos.length === 0 ? (
             <EmptyState text="Sin proyectos para relacionar." colors={colors} />
@@ -389,7 +387,7 @@ function ReportCard({ title, subtitle, kpi, colors }) {
           <strong style={{ color: colors.text }}>{title}</strong>
           <p style={{ ...styles.reportSubtitle, color: colors.subtext }}>{subtitle}</p>
         </div>
-        <StatusPill label={`${kpi.totalTareas || 0} tareas`} color="#6366f1" />
+        <StatusPill label={`${kpi.totalTareas || 0} tareas`} color="var(--primary)" />
       </div>
       <div style={{ ...styles.progressTrack, backgroundColor: '#94a3b833' }}>
         <div style={{ ...styles.progressFill, width: `${Math.min(avance, 100)}%`, backgroundColor: '#22c55e' }} />
@@ -448,8 +446,8 @@ function getRolInfo(rol) {
   if (rol === 'ADMIN') {
     return {
       label: 'Administrador',
-      color: '#6366f1',
-      permisos: ['Gestion completa', 'Administra proyectos', 'Administra recursos', 'Aprueba proyectos y tareas'],
+      color: 'var(--primary)',
+      permisos: ['Gestión completa', 'Administra proyectos', 'Administra recursos', 'Aprueba proyectos y tareas'],
     };
   }
   if (rol === 'JEFE_PROYECTO') {
@@ -484,22 +482,22 @@ function colorDisponibilidad(disponibilidad) {
 }
 
 const styles = {
-  container: { maxWidth: '1420px', margin: '0 auto', padding: '28px 24px 42px' },
+  container: { maxWidth: '1420px', margin: '0 auto', padding: '26px 24px 42px' },
   centerScreen: { minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', fontWeight: 800 },
-  hero: { border: '1px solid', borderRadius: '16px', padding: '24px', display: 'flex', justifyContent: 'space-between', gap: '18px', flexWrap: 'wrap', marginBottom: '16px', boxShadow: '0 20px 42px rgba(15, 23, 42, 0.14)' },
-  title: { margin: 0, fontSize: '32px', fontWeight: 900, letterSpacing: 0 },
+  hero: { border: '1px solid', borderRadius: '8px', padding: '22px', display: 'flex', justifyContent: 'space-between', gap: '18px', flexWrap: 'wrap', marginBottom: '14px', boxShadow: 'var(--shadow-sm)' },
+  title: { margin: 0, fontSize: '28px', fontWeight: 800, letterSpacing: 0 },
   subtitle: { margin: '8px 0 0', maxWidth: '680px', lineHeight: 1.5, fontSize: '14px' },
   heroMeta: { display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' },
-  infoPill: { border: '1px solid', borderRadius: '12px', padding: '9px 12px', display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '130px', color: '#e2e8f0' },
-  rolePanel: { border: '1px solid', borderRadius: '14px', padding: '14px', display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' },
-  roleIcon: { width: '44px', height: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  infoPill: { border: '1px solid', borderRadius: '8px', padding: '9px 12px', display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '130px', color: 'var(--text-primary)' },
+  rolePanel: { border: '1px solid', borderRadius: '8px', padding: '14px', display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' },
+  roleIcon: { width: '42px', height: '42px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   roleText: { margin: '4px 0 0', fontSize: '13px', lineHeight: 1.45 },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '16px' },
-  metricCard: { border: '1px solid', borderRadius: '15px', padding: '17px', display: 'flex', gap: '14px', alignItems: 'center', boxShadow: '0 12px 26px rgba(15, 23, 42, 0.10)' },
-  metricIcon: { width: '46px', height: '46px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  metricCard: { border: '1px solid', borderRadius: '8px', padding: '16px', display: 'flex', gap: '14px', alignItems: 'center', boxShadow: 'var(--shadow-sm)' },
+  metricIcon: { width: '44px', height: '44px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   metricValue: { fontSize: '28px', fontWeight: 900, lineHeight: 1 },
-  twoColumns: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '16px', marginBottom: '8px' },
-  panel: { border: '1px solid', borderRadius: '16px', padding: '18px', boxShadow: '0 12px 26px rgba(15, 23, 42, 0.08)' },
+  twoColumns: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px', marginBottom: '8px' },
+  panel: { border: '1px solid', borderRadius: '8px', padding: '18px', boxShadow: 'var(--shadow-sm)' },
   panelHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' },
   panelTitle: { margin: 0, fontSize: '18px', fontWeight: 900 },
   panelSubtitle: { margin: '4px 0 0', fontSize: '13px' },
@@ -508,35 +506,35 @@ const styles = {
   progressTrack: { width: '100%', height: '9px', borderRadius: '999px', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: '999px' },
   compactGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '10px' },
-  smallStat: { border: '1px solid', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '2px' },
-  levelBar: { marginTop: '14px', border: '1px solid', borderRadius: '12px', padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', color: '#94a3b8' },
+  smallStat: { border: '1px solid', borderRadius: '7px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '2px' },
+  levelBar: { marginTop: '14px', border: '1px solid', borderRadius: '7px', padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', color: 'var(--text-secondary)' },
   levelItem: { display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'center', fontSize: '12px', fontWeight: 700 },
   sectionHeader: { margin: '26px 0 12px' },
   sectionTitle: { margin: 0, fontSize: '20px', fontWeight: 900 },
   sectionSubtitle: { margin: '4px 0 0', fontSize: '13px' },
-  reportLayout: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '16px' },
+  reportLayout: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px' },
   reportStack: { display: 'grid', gap: '10px' },
-  reportCard: { border: '1px solid', borderRadius: '13px', padding: '13px' },
+  reportCard: { border: '1px solid', borderRadius: '7px', padding: '13px' },
   reportHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '10px' },
   reportSubtitle: { margin: '3px 0 0', fontSize: '12px' },
   reportProgress: { marginTop: '7px', fontSize: '12px' },
   reportMetrics: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginTop: '10px' },
-  miniMetric: { borderRadius: '10px', padding: '8px', backgroundColor: 'rgba(148, 163, 184, 0.12)', display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '11px', color: '#94a3b8', textAlign: 'center' },
+  miniMetric: { borderRadius: '7px', padding: '8px', backgroundColor: 'color-mix(in srgb, var(--text-tertiary) 12%, transparent)', display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center' },
   assignmentGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' },
-  assignmentCard: { border: '1px solid', borderRadius: '14px', padding: '15px' },
+  assignmentCard: { border: '1px solid', borderRadius: '8px', padding: '15px', boxShadow: 'var(--shadow-sm)' },
   assignmentTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' },
   assignmentText: { margin: '8px 0 10px', fontSize: '12px' },
   badgeList: { display: 'flex', flexWrap: 'wrap', gap: '7px' },
   personBadge: { border: '1px solid', borderRadius: '999px', padding: '5px 9px', fontSize: '12px', fontWeight: 700 },
   tablesGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '16px', marginTop: '22px' },
-  tableCard: { border: '1px solid', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 12px 26px rgba(15, 23, 42, 0.08)' },
+  tableCard: { border: '1px solid', borderRadius: '8px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' },
   tableTitle: { padding: '14px 16px', borderBottom: '1px solid', display: 'flex', alignItems: 'center', gap: '9px', fontWeight: 900 },
   tableWrap: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse', minWidth: '520px' },
-  th: { padding: '11px 14px', textAlign: 'left', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' },
+  th: { padding: '11px 14px', textAlign: 'left', fontSize: '11px', textTransform: 'uppercase', letterSpacing: 0 },
   td: { padding: '12px 14px', borderTop: '1px solid', fontSize: '13px' },
   statusPill: { border: '1px solid', borderRadius: '999px', padding: '5px 9px', fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap' },
-  emptyState: { border: '1px solid', borderRadius: '13px', padding: '16px', fontSize: '13px' },
+  emptyState: { border: '1px solid', borderRadius: '7px', padding: '16px', fontSize: '13px' },
 };
 
 export default Dashboard;

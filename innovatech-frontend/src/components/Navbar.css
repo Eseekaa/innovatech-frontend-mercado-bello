@@ -1,0 +1,249 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  min-height: 64px;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(18px) saturate(145%);
+}
+
+.topbar__inner {
+  width: min(100%, 1560px);
+  min-height: 64px;
+  margin: 0 auto;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.topbar__brand {
+  color: var(--nav-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.topbar__brand-mark {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: var(--primary);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+.topbar__brand-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.topbar__brand-copy strong {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.topbar__brand-copy small,
+.topbar__user-copy small {
+  color: var(--nav-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.topbar__content {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.topbar__nav,
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.topbar__link {
+  min-height: 40px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--nav-muted);
+  border-radius: 7px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.topbar__link:hover {
+  color: var(--nav-text);
+  background: var(--surface-hover);
+}
+
+.topbar__link--active {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.topbar__actions {
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.topbar__icon-button,
+.topbar__menu-button {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.topbar__icon-button:hover,
+.topbar__menu-button:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.topbar__menu-button {
+  display: none;
+  margin-left: auto;
+}
+
+.topbar__user {
+  min-width: 148px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.topbar__avatar {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  font-weight: 800;
+}
+
+.topbar__user-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.topbar__user-copy strong {
+  max-width: 120px;
+  overflow: hidden;
+  color: var(--nav-text);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__logout {
+  min-height: 38px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.topbar__logout:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+@media (max-width: 980px) {
+  .topbar__inner {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .topbar__menu-button {
+    display: inline-flex;
+  }
+
+  .topbar__content {
+    display: none;
+    width: 100%;
+    flex: 0 0 100%;
+    padding: 8px 0 4px;
+    border-top: 1px solid var(--border);
+  }
+
+  .topbar__content--open {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .topbar__nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbar__actions {
+    justify-content: space-between;
+    padding-top: 8px;
+  }
+
+  .topbar__user {
+    flex: 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .topbar__inner {
+    padding-inline: 14px;
+  }
+
+  .topbar__brand-copy small {
+    display: none;
+  }
+
+  .topbar__nav {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar__user {
+    min-width: 0;
+  }
+
+  .topbar__logout span {
+    display: none;
+  }
+}

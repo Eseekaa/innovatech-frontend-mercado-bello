@@ -1,54 +1,57 @@
-import React, { useState, createContext, useContext } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
 import Proyectos from './pages/Proyectos';
 import Recursos from './pages/Recursos';
+import Register from './pages/Register';
 import Tareas from './pages/Tareas';
 
-// Context del tema: permite que cualquier componente sepa si está en modo oscuro
-// createContext crea un "canal" global de comunicación entre componentes
-// sin necesidad de pasar props manualmente por cada nivel
 export const ThemeContext = createContext();
 
-// Hook personalizado para usar el tema fácilmente en cualquier componente
-// En vez de escribir useContext(ThemeContext) cada vez, usamos useTheme()
 export const useTheme = () => useContext(ThemeContext);
 
-// Componente que protege rutas privadas
-// Si no hay token JWT, redirige al login automáticamente
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+  return token ? children : <Navigate to="/login" replace />;
+}
+
+function getInitialTheme() {
+  const savedTheme = localStorage.getItem('innovatech-theme');
+  if (savedTheme === 'dark' || savedTheme === 'light') {
+    return savedTheme;
+  }
+
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function App() {
-  // Estado del modo oscuro - false = modo claro, true = modo oscuro
-  const [darkMode, setDarkMode] = useState(false);
+  const [theme, setTheme] = useState(getInitialTheme);
+  const darkMode = theme === 'dark';
 
-  // Alterna entre modo claro y oscuro
-  const toggleDarkMode = () => setDarkMode(!darkMode);
+  // El tema se guarda para que el usuario conserve su preferencia al volver.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('innovatech-theme', theme);
+  }, [theme]);
+
+  const toggleDarkMode = () => {
+    setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
-    // ThemeContext.Provider: hace que darkMode y toggleDarkMode
-    // estén disponibles para TODOS los componentes hijos
-    <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
-      {/* Aplica el fondo global según el tema */}
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: darkMode ? '#0f172a' : '#f0f2f5',
-        transition: 'all 0.3s ease',
-      }}>
+    <ThemeContext.Provider value={{ darkMode, theme, toggleDarkMode }}>
+      <div className="app-shell">
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/proyectos" element={<PrivateRoute><Proyectos /></PrivateRoute>} />
             <Route path="/recursos" element={<PrivateRoute><Recursos /></PrivateRoute>} />
             <Route path="/tareas" element={<PrivateRoute><Tareas /></PrivateRoute>} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </BrowserRouter>
       </div>

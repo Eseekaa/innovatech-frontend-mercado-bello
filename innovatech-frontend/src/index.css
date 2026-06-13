@@ -1,35 +1,202 @@
+:root {
+  color-scheme: light;
+  --app-bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafc;
+  --surface-raised: #ffffff;
+  --surface-hover: #eef4ff;
+  --text-primary: #172033;
+  --text-secondary: #5b687a;
+  --text-tertiary: #7b8798;
+  --border: #dce2ea;
+  --border-strong: #c6cfdb;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #eaf1ff;
+  --success: #0f9f6e;
+  --success-soft: #e8f8f1;
+  --warning: #c77800;
+  --warning-soft: #fff4db;
+  --danger: #d63c48;
+  --danger-soft: #fff0f1;
+  --info: #087ea4;
+  --info-soft: #e9f7fb;
+  --nav-bg: rgba(255, 255, 255, 0.94);
+  --nav-text: #172033;
+  --nav-muted: #667085;
+  --focus-ring: rgba(37, 99, 235, 0.28);
+  --shadow-sm: 0 1px 2px rgba(18, 29, 48, 0.05);
+  --shadow-md: 0 8px 24px rgba(18, 29, 48, 0.08);
+  --shadow-lg: 0 18px 48px rgba(18, 29, 48, 0.12);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --app-bg: #10141c;
+  --surface: #181e29;
+  --surface-subtle: #131923;
+  --surface-raised: #1d2532;
+  --surface-hover: #202d42;
+  --text-primary: #f2f5f9;
+  --text-secondary: #b2bdcc;
+  --text-tertiary: #8f9bad;
+  --border: #303a49;
+  --border-strong: #414d5f;
+  --primary: #6ea8fe;
+  --primary-hover: #91bdff;
+  --primary-soft: #1b3153;
+  --success: #4dd4a4;
+  --success-soft: #17372f;
+  --warning: #f2b84b;
+  --warning-soft: #3b301b;
+  --danger: #ff7b83;
+  --danger-soft: #42252b;
+  --info: #67c7e8;
+  --info-soft: #183541;
+  --nav-bg: rgba(24, 30, 41, 0.94);
+  --nav-text: #f2f5f9;
+  --nav-muted: #9da9ba;
+  --focus-ring: rgba(110, 168, 254, 0.32);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.24);
+  --shadow-lg: 0 20px 52px rgba(0, 0, 0, 0.34);
+}
+
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f0f2f5;
-  color: #333;
+html {
+  min-width: 320px;
+  background: var(--app-bg);
 }
 
-/* Scrollbar personalizado */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--app-bg);
+  color: var(--text-primary);
+  font-family: Inter, "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: 0;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+    box-shadow 160ms ease, transform 160ms ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+::selection {
+  background: var(--primary);
+  color: #ffffff;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--surface-subtle);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1a237e;
-  border-radius: 4px;
+  background: var(--border-strong);
+  border: 2px solid var(--surface-subtle);
+  border-radius: 8px;
 }
 
-/* Animación de entrada para las tarjetas */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.app-shell {
+  min-height: 100vh;
+  background: var(--app-bg);
+  color: var(--text-primary);
 }
 
-.fade-in {
-  animation: fadeIn 0.4s ease;
+.app-page {
+  min-height: 100vh;
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+.app-main {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+}
+
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.page-enter {
+  animation: page-enter 260ms ease both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    font-size: 13px;
+  }
+
+  .app-main {
+    width: 100%;
+    padding: 18px 14px 34px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

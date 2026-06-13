@@ -34,15 +34,15 @@ function Proyectos() {
   const muestraAcciones = puedeCambiarVistoBueno || puedeGestionarProyecto || puedeEliminarProyecto;
 
   const colors = {
-    bg: darkMode ? '#0f172a' : '#f0f2f5',
-    card: darkMode ? '#1e293b' : 'white',
-    text: darkMode ? '#f1f5f9' : '#0f172a',
-    subtext: darkMode ? '#94a3b8' : '#64748b',
-    border: darkMode ? '#334155' : '#e2e8f0',
-    input: darkMode ? '#0f172a' : 'white',
-    inputText: darkMode ? '#f1f5f9' : '#0f172a',
-    th: darkMode ? '#0f172a' : '#f8f9ff',
-    thText: darkMode ? '#94a3b8' : '#888',
+    bg: 'var(--app-bg)',
+    card: 'var(--surface)',
+    text: 'var(--text-primary)',
+    subtext: 'var(--text-secondary)',
+    border: 'var(--border)',
+    input: 'var(--surface-subtle)',
+    inputText: 'var(--text-primary)',
+    th: 'var(--surface-subtle)',
+    thText: 'var(--text-secondary)',
   };
 
   useEffect(() => {
@@ -157,9 +157,9 @@ function Proyectos() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, transition: 'all 0.3s' }}>
+    <div className="app-page" style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       <Navbar />
-      <div style={styles.container}>
+      <main className="app-main page-enter" style={styles.container}>
         {mensaje && (
           <div style={{
             ...styles.toast,
@@ -172,7 +172,7 @@ function Proyectos() {
         )}
         <div style={styles.header}>
           <div>
-            <h1 style={{ ...styles.title, color: colors.text }}>Gestion de Proyectos</h1>
+            <h1 style={{ ...styles.title, color: colors.text }}>Gestión de Proyectos</h1>
             <p style={{ color: colors.subtext, fontSize: '14px' }}>
               {proyectos.length} proyecto(s) registrado(s)
             </p>
@@ -345,52 +345,52 @@ function Proyectos() {
             </tbody>
           </table>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
 
 const styles = {
-  container: { padding: '24px', maxWidth: '1400px', margin: '0 auto' },
+  container: { padding: '26px 24px 42px', maxWidth: '1400px', margin: '0 auto' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: '24px', flexWrap: 'wrap', gap: '16px' },
-  title: { fontSize: '28px', fontWeight: '800', marginBottom: '4px' },
-  btn: { padding: '11px 20px', borderRadius: '10px', cursor: 'pointer',
+  title: { fontSize: '28px', fontWeight: '800', marginBottom: '4px', letterSpacing: 0 },
+  btn: { padding: '10px 16px', borderRadius: '7px', cursor: 'pointer',
     fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' },
   btnPrimary: {
-    background: 'linear-gradient(135deg, #1a237e, #1565c0)',
-    color: 'white', border: 'none', padding: '11px 20px',
-    borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700',
+    background: 'var(--primary)',
+    color: 'white', border: '1px solid var(--primary)', padding: '10px 16px',
+    borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontWeight: '800',
     display: 'flex', alignItems: 'center', gap: '6px',
-    boxShadow: '0 4px 15px rgba(26,35,126,0.3)',
+    boxShadow: '0 6px 16px color-mix(in srgb, var(--primary) 20%, transparent)',
   },
   btnSuccess: {
-    background: 'linear-gradient(135deg, #16a34a, #15803d)',
-    color: 'white', border: 'none', padding: '11px 24px',
-    borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700',
-    boxShadow: '0 4px 15px rgba(22,163,74,0.3)',
+    background: 'var(--success)',
+    color: 'white', border: '1px solid var(--success)', padding: '10px 18px',
+    borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontWeight: '800',
+    boxShadow: '0 6px 16px color-mix(in srgb, var(--success) 20%, transparent)',
   },
   formCard: {
-    borderRadius: '16px', padding: '28px', marginBottom: '24px',
-    borderTop: '4px solid #1a237e', border: '1px solid',
+    borderRadius: '8px', padding: '24px', marginBottom: '20px',
+    borderTop: '3px solid var(--primary)', border: '1px solid', boxShadow: 'var(--shadow-sm)',
   },
   formTitle: { fontSize: '18px', fontWeight: '700', marginBottom: '20px' },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '700', letterSpacing: '0.3px' },
+  label: { fontSize: '12px', fontWeight: '700', letterSpacing: 0 },
   input: {
-    padding: '10px 14px', borderRadius: '8px', border: '2px solid',
+    padding: '10px 12px', borderRadius: '7px', border: '1px solid',
     fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box',
     transition: 'border-color 0.2s',
   },
   toast: {
-    border: '1px solid', borderRadius: '10px', padding: '12px 14px',
+    border: '1px solid', borderRadius: '7px', padding: '12px 14px',
     fontSize: '14px', fontWeight: '800', marginBottom: '16px',
   },
-  tableCard: { borderRadius: '16px', overflowX: 'auto', overflowY: 'hidden', border: '1px solid' },
+  tableCard: { borderRadius: '8px', overflowX: 'auto', overflowY: 'hidden', border: '1px solid', boxShadow: 'var(--shadow-sm)' },
   table: { width: '100%', borderCollapse: 'collapse', minWidth: '1050px' },
   th: { padding: '13px 16px', textAlign: 'left', fontSize: '11px',
-    fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' },
+    fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0 },
   td: { padding: '14px 16px', fontSize: '14px' },
   assignedList: { display: 'flex', gap: '6px', flexWrap: 'wrap' },
   assignedBadge: {

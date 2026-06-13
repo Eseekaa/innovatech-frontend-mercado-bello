@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
-import { useTheme } from '../App';
 import { proyectosService, recursosService, tareasService } from '../services/api';
 import {
   FiActivity,
@@ -39,7 +38,6 @@ const initialForm = {
 };
 
 function Tareas() {
-  const { darkMode } = useTheme();
   const rol = localStorage.getItem('rol') || 'USUARIO';
   const canManage = rol === 'ADMIN' || rol === 'JEFE_PROYECTO';
   const puedeAprobarTareas = rol === 'ADMIN' || rol === 'JEFE_PROYECTO';
@@ -59,13 +57,13 @@ function Tareas() {
   const [error, setError] = useState('');
 
   const colors = {
-    bg: darkMode ? '#0f172a' : '#f0f2f5',
-    card: darkMode ? '#1e293b' : '#ffffff',
-    text: darkMode ? '#f8fafc' : '#0f172a',
-    subtext: darkMode ? '#94a3b8' : '#64748b',
-    border: darkMode ? '#334155' : '#e2e8f0',
-    input: darkMode ? '#111827' : '#ffffff',
-    tableHead: darkMode ? '#111827' : '#f8fafc',
+    bg: 'var(--app-bg)',
+    card: 'var(--surface)',
+    text: 'var(--text-primary)',
+    subtext: 'var(--text-secondary)',
+    border: 'var(--border)',
+    input: 'var(--surface-subtle)',
+    tableHead: 'var(--surface-subtle)',
   };
 
   useEffect(() => {
@@ -277,7 +275,7 @@ function Tareas() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+      <div className="app-page" style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
         <Navbar />
         <div style={styles.center}>Cargando tareas...</div>
       </div>
@@ -285,12 +283,12 @@ function Tareas() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+    <div className="app-page" style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       <Navbar />
-      <main style={styles.container}>
+      <main className="app-main page-enter" style={styles.container}>
         <section style={{ ...styles.hero, backgroundColor: colors.card, borderColor: colors.border }}>
           <div style={styles.heroContent}>
-            <h1 style={{ ...styles.title, color: colors.text }}>Gestion de Tareas</h1>
+            <h1 style={{ ...styles.title, color: colors.text }}>Gestión de Tareas</h1>
             <p style={{ ...styles.subtitle, color: colors.subtext }}>
               Monitorea tareas por proyecto, responsables, avance, prioridad y estado operativo.
             </p>
@@ -570,19 +568,19 @@ function inputStyle(colors) {
 }
 
 const styles = {
-  container: { maxWidth: '1400px', margin: '0 auto', padding: '28px 24px 40px' },
+  container: { maxWidth: '1400px', margin: '0 auto', padding: '26px 24px 42px' },
   center: { minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 },
   hero: {
     border: '1px solid',
-    borderRadius: '16px',
-    padding: '22px',
-    marginBottom: '20px',
+    borderRadius: '8px',
+    padding: '20px',
+    marginBottom: '16px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: '16px',
     flexWrap: 'wrap',
-    boxShadow: '0 18px 45px rgba(15, 23, 42, 0.18)',
+    boxShadow: 'var(--shadow-sm)',
   },
   heroContent: { maxWidth: '720px' },
   heroActions: { display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' },
@@ -595,39 +593,39 @@ const styles = {
     color: '#60a5fa',
     fontSize: '11px',
     fontWeight: 900,
-    letterSpacing: '0.08em',
+    letterSpacing: 0,
     textTransform: 'uppercase',
   },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '14px' },
-  title: { margin: 0, fontSize: '30px', fontWeight: 900, letterSpacing: 0 },
+  title: { margin: 0, fontSize: '28px', fontWeight: 800, letterSpacing: 0 },
   sectionTitle: { margin: 0, fontSize: '18px', fontWeight: 900 },
   subtitle: { margin: '6px 0 0', fontSize: '14px', lineHeight: 1.5 },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '14px', marginBottom: '18px' },
-  kpiCard: { border: '1px solid', borderRadius: '14px', padding: '16px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)' },
-  kpiIcon: { width: '44px', height: '44px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  kpiCard: { border: '1px solid', borderRadius: '8px', padding: '16px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: 'var(--shadow-sm)' },
+  kpiIcon: { width: '44px', height: '44px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   kpiValue: { fontSize: '24px', fontWeight: 900, lineHeight: 1 },
-  filterPanel: { border: '1px solid', borderRadius: '14px', padding: '16px', marginBottom: '18px', boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)' },
+  filterPanel: { border: '1px solid', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: 'var(--shadow-sm)' },
   filterTitle: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#60a5fa', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase' },
   filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', alignItems: 'center' },
-  searchBox: { display: 'flex', alignItems: 'center', gap: '10px', minHeight: '42px', border: '1px solid', borderRadius: '10px', padding: '0 12px' },
+  searchBox: { display: 'flex', alignItems: 'center', gap: '10px', minHeight: '42px', border: '1px solid', borderRadius: '7px', padding: '0 12px' },
   searchInput: { flex: 1, border: 0, outline: 'none', background: 'transparent', fontSize: '14px', minWidth: 0 },
-  panel: { border: '1px solid', borderRadius: '14px', padding: '18px', marginBottom: '18px', boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)' },
+  panel: { border: '1px solid', borderRadius: '8px', padding: '18px', marginBottom: '16px', boxShadow: 'var(--shadow-sm)' },
   panelHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' },
   panelTitle: { margin: 0, fontSize: '18px', fontWeight: 800 },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: 800, textTransform: 'uppercase' },
-  responsablesBox: { border: '1px solid', borderRadius: '10px', padding: '12px' },
+  responsablesBox: { border: '1px solid', borderRadius: '7px', padding: '12px' },
   responsablesGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', marginTop: '8px' },
   checkboxItem: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' },
   formActions: { gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' },
-  primaryButton: { display: 'flex', alignItems: 'center', gap: '8px', border: 0, borderRadius: '10px', padding: '11px 16px', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: 'white', fontWeight: 900, cursor: 'pointer', boxShadow: '0 12px 26px rgba(37, 99, 235, 0.30)' },
-  refreshButton: { display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(148, 163, 184, 0.35)', borderRadius: '10px', padding: '10px 14px', backgroundColor: 'rgba(148, 163, 184, 0.12)', color: '#dbeafe', fontWeight: 800, cursor: 'pointer' },
-  secondaryButton: { border: '1px solid #cbd5e1', borderRadius: '9px', padding: '10px 14px', backgroundColor: '#f8fafc', color: '#334155', fontWeight: 800, cursor: 'pointer' },
+  primaryButton: { display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--primary)', borderRadius: '7px', padding: '10px 15px', background: 'var(--primary)', color: 'white', fontWeight: 800, cursor: 'pointer', boxShadow: '0 6px 16px color-mix(in srgb, var(--primary) 20%, transparent)' },
+  refreshButton: { display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-strong)', borderRadius: '7px', padding: '9px 13px', backgroundColor: 'var(--surface-subtle)', color: 'var(--text-secondary)', fontWeight: 800, cursor: 'pointer' },
+  secondaryButton: { border: '1px solid var(--border-strong)', borderRadius: '7px', padding: '9px 13px', backgroundColor: 'var(--surface-subtle)', color: 'var(--text-secondary)', fontWeight: 800, cursor: 'pointer' },
   saveButton: { display: 'flex', alignItems: 'center', gap: '8px', border: 0, borderRadius: '8px', padding: '10px 14px', backgroundColor: '#16a34a', color: 'white', fontWeight: 800, cursor: 'pointer' },
   tableWrap: { width: '100%', overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse', minWidth: '980px' },
-  th: { textAlign: 'left', padding: '12px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' },
+  th: { textAlign: 'left', padding: '12px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: 0 },
   td: { padding: '12px', borderTop: '1px solid', verticalAlign: 'middle', fontSize: '14px' },
   empty: { textAlign: 'center', padding: '28px' },
   description: { display: 'block', marginTop: '4px', fontSize: '12px' },
