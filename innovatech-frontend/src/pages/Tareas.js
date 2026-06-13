@@ -7,8 +7,11 @@ import {
   FiCheckCircle,
   FiClock,
   FiEdit2,
+  FiFilter,
   FiPlus,
+  FiRefreshCw,
   FiSave,
+  FiSearch,
   FiTrash2,
   FiUsers,
   FiXCircle,
@@ -46,6 +49,7 @@ function Tareas() {
   const [kpis, setKpis] = useState(null);
   const [form, setForm] = useState(initialForm);
   const [editing, setEditing] = useState(null);
+  const [filtros, setFiltros] = useState({ busqueda: '', proyectoId: '', estado: '' });
   // El formulario parte oculto para que la pantalla primero muestre el resumen.
   // Se abre solo cuando el usuario presiona "Nueva Tarea" o edita una tarea.
   const [showForm, setShowForm] = useState(false);
@@ -210,6 +214,35 @@ function Tareas() {
     BLOQUEADA: '#ef4444',
   }[estado] || '#64748b');
 
+  const busquedaFiltro = filtros.busqueda.trim().toLowerCase();
+
+  // Los filtros se aplican en memoria porque la cantidad de tareas de la demo es pequena.
+  // En una aplicacion productiva grande, estos filtros podrian enviarse al backend.
+  const tareasFiltradas = tareas.filter((tarea) => {
+    const proyecto = nombreProyecto(tarea.proyectoId).toLowerCase();
+    const responsables = (tarea.responsableIds || [])
+      .map(id => nombreRecurso(id).toLowerCase())
+      .join(' ');
+    const texto = [
+      tarea.titulo,
+      tarea.descripcion,
+      tarea.estado,
+      tarea.prioridad,
+      proyecto,
+      responsables,
+    ].join(' ').toLowerCase();
+
+    const coincideBusqueda = !busquedaFiltro || texto.includes(busquedaFiltro);
+    const coincideProyecto = !filtros.proyectoId || String(tarea.proyectoId) === String(filtros.proyectoId);
+    const coincideEstado = !filtros.estado || tarea.estado === filtros.estado;
+
+    return coincideBusqueda && coincideProyecto && coincideEstado;
+  });
+
+  const limpiarFiltros = () => {
+    setFiltros({ busqueda: '', proyectoId: '', estado: '' });
+  };
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
@@ -223,18 +256,31 @@ function Tareas() {
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       <Navbar />
       <main style={styles.container}>
-        <section style={styles.header}>
-          <div>
+        <section style={{ ...styles.hero, backgroundColor: colors.card, borderColor: colors.border }}>
+          <div style={styles.heroContent}>
+            <span style={styles.eyebrow}>Modulo EV3</span>
             <h1 style={{ ...styles.title, color: colors.text }}>Gestion de Tareas</h1>
             <p style={{ ...styles.subtitle, color: colors.subtext }}>
-              Monitoreo de avance, responsables y estado operativo de cada proyecto.
+              Monitorea tareas por proyecto, responsables, avance, prioridad y estado operativo.
             </p>
           </div>
-          {canManage && (
-            <button onClick={abrirNuevaTarea} style={styles.primaryButton}>
-              <FiPlus size={16} /> Nueva Tarea
+          <div style={styles.heroActions}>
+            <button onClick={cargarDatos} style={styles.refreshButton}>
+              <FiRefreshCw size={15} /> Actualizar
             </button>
-          )}
+            {canManage && (
+              <button onClick={abrirNuevaTarea} style={styles.primaryButton}>
+                <FiPlus size={16} /> Nueva Tarea
+              </button>
+            )}
+          </div>
+        </section>
+
+        <section style={styles.header}>
+          <div>
+            <h2 style={{ ...styles.sectionTitle, color: colors.text }}>Resumen operativo</h2>
+            <p style={{ ...styles.subtitle, color: colors.subtext }}>Indicadores principales del trabajo planificado.</p>
+          </div>
         </section>
 
         {error && <div style={styles.error}>{error}</div>}
@@ -245,6 +291,43 @@ function Tareas() {
           <KpiCard icon={<FiCheckCircle />} label="Completadas" value={kpis?.tareasCompletadas || 0} color="#22c55e" colors={colors} />
           <KpiCard icon={<FiXCircle />} label="Vencidas" value={kpis?.tareasVencidas || 0} color="#ef4444" colors={colors} />
           <KpiCard icon={<FiActivity />} label="Avance promedio" value={`${kpis?.avancePromedio || 0}%`} color="#f59e0b" colors={colors} />
+        </section>
+
+        <section style={{ ...styles.filterPanel, backgroundColor: colors.card, borderColor: colors.border }}>
+          <div style={styles.filterTitle}>
+            <FiFilter size={16} />
+            <span>Filtros de monitoreo</span>
+          </div>
+          <div style={styles.filterGrid}>
+            <label style={{ ...styles.searchBox, borderColor: colors.border, backgroundColor: colors.input }}>
+              <FiSearch size={16} color={colors.subtext} />
+              <input
+                value={filtros.busqueda}
+                onChange={(event) => setFiltros(prev => ({ ...prev, busqueda: event.target.value }))}
+                placeholder="Buscar por tarea, proyecto o responsable"
+                style={{ ...styles.searchInput, color: colors.text }}
+              />
+            </label>
+            <select
+              value={filtros.proyectoId}
+              onChange={(event) => setFiltros(prev => ({ ...prev, proyectoId: event.target.value }))}
+              style={inputStyle(colors)}
+            >
+              <option value="">Todos los proyectos</option>
+              {proyectos.map(proyecto => (
+                <option key={proyecto.id} value={proyecto.id}>{proyecto.nombre}</option>
+              ))}
+            </select>
+            <select
+              value={filtros.estado}
+              onChange={(event) => setFiltros(prev => ({ ...prev, estado: event.target.value }))}
+              style={inputStyle(colors)}
+            >
+              <option value="">Todos los estados</option>
+              {estadoOptions.map(estado => <option key={estado} value={estado}>{estadoLabels[estado]}</option>)}
+            </select>
+            <button type="button" onClick={limpiarFiltros} style={styles.secondaryButton}>Limpiar</button>
+          </div>
         </section>
 
         {showForm && (
@@ -324,7 +407,7 @@ function Tareas() {
         <section style={{ ...styles.panel, backgroundColor: colors.card, borderColor: colors.border }}>
           <div style={styles.panelHeader}>
             <h2 style={{ ...styles.panelTitle, color: colors.text }}>Tareas registradas</h2>
-            <span style={{ color: colors.subtext }}>{tareas.length} tarea(s)</span>
+            <span style={{ color: colors.subtext }}>{tareasFiltradas.length} de {tareas.length} tarea(s)</span>
           </div>
           <div style={styles.tableWrap}>
             <table style={styles.table}>
@@ -336,9 +419,9 @@ function Tareas() {
                 </tr>
               </thead>
               <tbody>
-                {tareas.length === 0 ? (
-                  <tr><td colSpan="7" style={{ ...styles.empty, color: colors.subtext }}>Sin tareas registradas</td></tr>
-                ) : tareas.map(tarea => (
+                {tareasFiltradas.length === 0 ? (
+                  <tr><td colSpan="7" style={{ ...styles.empty, color: colors.subtext }}>No hay tareas que coincidan con los filtros.</td></tr>
+                ) : tareasFiltradas.map(tarea => (
                   <tr key={tarea.id}>
                     <td style={{ ...styles.td, color: colors.text, borderColor: colors.border }}>
                       <strong>{tarea.titulo}</strong>
@@ -435,16 +518,48 @@ function inputStyle(colors) {
 }
 
 const styles = {
-  container: { maxWidth: '1400px', margin: '0 auto', padding: '24px' },
+  container: { maxWidth: '1400px', margin: '0 auto', padding: '28px 24px 40px' },
   center: { minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '18px' },
-  title: { margin: 0, fontSize: '28px', fontWeight: 800 },
-  subtitle: { margin: '6px 0 0', fontSize: '14px' },
+  hero: {
+    border: '1px solid',
+    borderRadius: '16px',
+    padding: '22px',
+    marginBottom: '20px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '16px',
+    flexWrap: 'wrap',
+    boxShadow: '0 18px 45px rgba(15, 23, 42, 0.18)',
+  },
+  heroContent: { maxWidth: '720px' },
+  heroActions: { display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' },
+  eyebrow: {
+    display: 'inline-flex',
+    marginBottom: '8px',
+    padding: '5px 10px',
+    borderRadius: '999px',
+    background: 'rgba(59, 130, 246, 0.16)',
+    color: '#60a5fa',
+    fontSize: '11px',
+    fontWeight: 900,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '14px' },
+  title: { margin: 0, fontSize: '30px', fontWeight: 900, letterSpacing: 0 },
+  sectionTitle: { margin: 0, fontSize: '18px', fontWeight: 900 },
+  subtitle: { margin: '6px 0 0', fontSize: '14px', lineHeight: 1.5 },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '14px', marginBottom: '18px' },
-  kpiCard: { border: '1px solid', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '14px' },
+  kpiCard: { border: '1px solid', borderRadius: '14px', padding: '16px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)' },
   kpiIcon: { width: '44px', height: '44px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   kpiValue: { fontSize: '24px', fontWeight: 900, lineHeight: 1 },
-  panel: { border: '1px solid', borderRadius: '12px', padding: '18px', marginBottom: '18px' },
+  filterPanel: { border: '1px solid', borderRadius: '14px', padding: '16px', marginBottom: '18px', boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)' },
+  filterTitle: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#60a5fa', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase' },
+  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', alignItems: 'center' },
+  searchBox: { display: 'flex', alignItems: 'center', gap: '10px', minHeight: '42px', border: '1px solid', borderRadius: '10px', padding: '0 12px' },
+  searchInput: { flex: 1, border: 0, outline: 'none', background: 'transparent', fontSize: '14px', minWidth: 0 },
+  panel: { border: '1px solid', borderRadius: '14px', padding: '18px', marginBottom: '18px', boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)' },
   panelHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' },
   panelTitle: { margin: 0, fontSize: '18px', fontWeight: 800 },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px' },
@@ -454,18 +569,19 @@ const styles = {
   responsablesGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', marginTop: '8px' },
   checkboxItem: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' },
   formActions: { gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' },
-  primaryButton: { display: 'flex', alignItems: 'center', gap: '8px', border: 0, borderRadius: '9px', padding: '11px 16px', backgroundColor: '#2563eb', color: 'white', fontWeight: 800, cursor: 'pointer' },
-  secondaryButton: { border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', backgroundColor: '#f8fafc', color: '#334155', fontWeight: 700, cursor: 'pointer' },
+  primaryButton: { display: 'flex', alignItems: 'center', gap: '8px', border: 0, borderRadius: '10px', padding: '11px 16px', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: 'white', fontWeight: 900, cursor: 'pointer', boxShadow: '0 12px 26px rgba(37, 99, 235, 0.30)' },
+  refreshButton: { display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(148, 163, 184, 0.35)', borderRadius: '10px', padding: '10px 14px', backgroundColor: 'rgba(148, 163, 184, 0.12)', color: '#dbeafe', fontWeight: 800, cursor: 'pointer' },
+  secondaryButton: { border: '1px solid #cbd5e1', borderRadius: '9px', padding: '10px 14px', backgroundColor: '#f8fafc', color: '#334155', fontWeight: 800, cursor: 'pointer' },
   saveButton: { display: 'flex', alignItems: 'center', gap: '8px', border: 0, borderRadius: '8px', padding: '10px 14px', backgroundColor: '#16a34a', color: 'white', fontWeight: 800, cursor: 'pointer' },
   tableWrap: { width: '100%', overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse', minWidth: '980px' },
-  th: { textAlign: 'left', padding: '12px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: 0 },
+  th: { textAlign: 'left', padding: '12px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' },
   td: { padding: '12px', borderTop: '1px solid', verticalAlign: 'middle', fontSize: '14px' },
   empty: { textAlign: 'center', padding: '28px' },
   description: { display: 'block', marginTop: '4px', fontSize: '12px' },
   badgeList: { display: 'flex', flexWrap: 'wrap', gap: '6px' },
   personBadge: { display: 'inline-flex', alignItems: 'center', gap: '5px', border: '1px solid', borderRadius: '999px', padding: '5px 8px', fontSize: '12px', fontWeight: 700 },
-  statusBadge: { border: '1px solid', borderRadius: '999px', padding: '5px 8px', fontSize: '11px', fontWeight: 900 },
+  statusBadge: { border: '1px solid', borderRadius: '999px', padding: '5px 9px', fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap' },
   progressWrap: { display: 'flex', alignItems: 'center', gap: '8px', minWidth: '130px' },
   progressTrack: { flex: 1, height: '8px', borderRadius: '999px', backgroundColor: '#e2e8f0', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: '999px' },
