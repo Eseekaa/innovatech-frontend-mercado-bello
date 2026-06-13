@@ -122,6 +122,10 @@ export const tareasService = {
   // PATCH /api/bff/tareas/{id}/estado - actualiza solo estado y avance.
   updateEstado: (id, data) => api.patch(`/tareas/${id}/estado`, data),
 
+  // PATCH /api/bff/tareas/{id}/visto-bueno
+  // Marca una tarea completada como aprobada, o le quita esa aprobacion.
+  updateVistoBueno: (id, vistoBueno) => api.patch(`/tareas/${id}/visto-bueno?vistoBueno=${vistoBueno}`),
+
   // DELETE /api/bff/tareas/{id} - elimina una tarea.
   delete: (id) => api.delete(`/tareas/${id}`),
 };

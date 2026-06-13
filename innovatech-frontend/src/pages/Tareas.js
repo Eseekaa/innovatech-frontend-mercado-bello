@@ -42,6 +42,7 @@ function Tareas() {
   const { darkMode } = useTheme();
   const rol = localStorage.getItem('rol') || 'USUARIO';
   const canManage = rol === 'ADMIN' || rol === 'JEFE_PROYECTO';
+  const puedeAprobarTareas = rol === 'ADMIN' || rol === 'JEFE_PROYECTO';
 
   const [tareas, setTareas] = useState([]);
   const [proyectos, setProyectos] = useState([]);
@@ -54,6 +55,7 @@ function Tareas() {
   // Se abre solo cuando el usuario presiona "Nueva Tarea" o edita una tarea.
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [actualizando, setActualizando] = useState(false);
   const [error, setError] = useState('');
 
   const colors = {
@@ -72,6 +74,7 @@ function Tareas() {
 
   const cargarDatos = async () => {
     try {
+      setActualizando(true);
       setError('');
       const [tareasRes, proyectosRes, recursosRes, kpisRes] = await Promise.all([
         tareasService.getAll(),
@@ -87,6 +90,7 @@ function Tareas() {
       setError('No se pudieron cargar las tareas.');
     } finally {
       setLoading(false);
+      setActualizando(false);
     }
   };
 
@@ -197,6 +201,24 @@ function Tareas() {
     }
   };
 
+  const cambiarVistoBueno = async (tarea) => {
+    if (!puedeAprobarTareas) return;
+
+    // Regla de negocio: solo se aprueba formalmente algo que ya esta completado.
+    // Si cambia a pendiente/en progreso/bloqueada, el backend quita el visto bueno.
+    if (tarea.estado !== 'COMPLETADA') {
+      setError('Solo se puede dar visto bueno a tareas completadas.');
+      return;
+    }
+
+    try {
+      await tareasService.updateVistoBueno(tarea.id, !tarea.vistoBueno);
+      await cargarDatos();
+    } catch (err) {
+      setError('No se pudo actualizar el visto bueno de la tarea.');
+    }
+  };
+
   const nombreProyecto = (id) => {
     const proyecto = proyectos.find(item => String(item.id) === String(id));
     return proyecto ? proyecto.nombre : `Proyecto ${id}`;
@@ -213,6 +235,16 @@ function Tareas() {
     COMPLETADA: '#22c55e',
     BLOQUEADA: '#ef4444',
   }[estado] || '#64748b');
+
+  const validarVistoBueno = (tarea) => {
+    if (tarea.estado !== 'COMPLETADA') {
+      return { label: 'No aplica', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.16)' };
+    }
+    if (tarea.vistoBueno) {
+      return { label: 'Aprobada', color: '#16a34a', bg: 'rgba(34, 197, 94, 0.16)' };
+    }
+    return { label: 'Pendiente VB', color: '#d97706', bg: 'rgba(245, 158, 11, 0.18)' };
+  };
 
   const busquedaFiltro = filtros.busqueda.trim().toLowerCase();
 
@@ -258,15 +290,14 @@ function Tareas() {
       <main style={styles.container}>
         <section style={{ ...styles.hero, backgroundColor: colors.card, borderColor: colors.border }}>
           <div style={styles.heroContent}>
-            <span style={styles.eyebrow}>Modulo EV3</span>
             <h1 style={{ ...styles.title, color: colors.text }}>Gestion de Tareas</h1>
             <p style={{ ...styles.subtitle, color: colors.subtext }}>
               Monitorea tareas por proyecto, responsables, avance, prioridad y estado operativo.
             </p>
           </div>
           <div style={styles.heroActions}>
-            <button onClick={cargarDatos} style={styles.refreshButton}>
-              <FiRefreshCw size={15} /> Actualizar
+            <button onClick={cargarDatos} disabled={actualizando} style={{ ...styles.refreshButton, opacity: actualizando ? 0.75 : 1 }}>
+              <FiRefreshCw size={15} /> {actualizando ? 'Actualizando...' : 'Actualizar'}
             </button>
             {canManage && (
               <button onClick={abrirNuevaTarea} style={styles.primaryButton}>
@@ -289,7 +320,8 @@ function Tareas() {
           <KpiCard icon={<FiActivity />} label="Total tareas" value={kpis?.totalTareas || 0} color="#6366f1" colors={colors} />
           <KpiCard icon={<FiClock />} label="En progreso" value={kpis?.tareasEnProgreso || 0} color="#3b82f6" colors={colors} />
           <KpiCard icon={<FiCheckCircle />} label="Completadas" value={kpis?.tareasCompletadas || 0} color="#22c55e" colors={colors} />
-          <KpiCard icon={<FiXCircle />} label="Vencidas" value={kpis?.tareasVencidas || 0} color="#ef4444" colors={colors} />
+          <KpiCard icon={<FiCheckCircle />} label="Aprobadas" value={kpis?.tareasAprobadas || 0} color="#14b8a6" colors={colors} />
+          <KpiCard icon={<FiXCircle />} label="Pend. visto bueno" value={kpis?.tareasPendientesAprobacion || 0} color="#f59e0b" colors={colors} />
           <KpiCard icon={<FiActivity />} label="Avance promedio" value={`${kpis?.avancePromedio || 0}%`} color="#f59e0b" colors={colors} />
         </section>
 
@@ -413,14 +445,14 @@ function Tareas() {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {['Tarea', 'Proyecto', 'Responsables', 'Estado', 'Avance', 'Prioridad', 'Acciones'].map(head => (
+                  {['Tarea', 'Proyecto', 'Responsables', 'Estado', 'Avance', 'Prioridad', 'Cierre', 'Acciones'].map(head => (
                     <th key={head} style={{ ...styles.th, backgroundColor: colors.tableHead, color: colors.subtext }}>{head}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {tareasFiltradas.length === 0 ? (
-                  <tr><td colSpan="7" style={{ ...styles.empty, color: colors.subtext }}>No hay tareas que coincidan con los filtros.</td></tr>
+                  <tr><td colSpan="8" style={{ ...styles.empty, color: colors.subtext }}>No hay tareas que coincidan con los filtros.</td></tr>
                 ) : tareasFiltradas.map(tarea => (
                   <tr key={tarea.id}>
                     <td style={{ ...styles.td, color: colors.text, borderColor: colors.border }}>
@@ -448,6 +480,26 @@ function Tareas() {
                       <Progress value={tarea.avance || 0} color={estadoColor(tarea.estado)} />
                     </td>
                     <td style={{ ...styles.td, color: colors.subtext, borderColor: colors.border }}>{tarea.prioridad}</td>
+                    <td style={{ ...styles.td, borderColor: colors.border }}>
+                      <div style={styles.validationCell}>
+                        <span style={{
+                          ...styles.validationBadge,
+                          color: validarVistoBueno(tarea).color,
+                          backgroundColor: validarVistoBueno(tarea).bg,
+                        }}>
+                          {validarVistoBueno(tarea).label}
+                        </span>
+                        {puedeAprobarTareas && tarea.estado === 'COMPLETADA' && (
+                          <button
+                            type="button"
+                            onClick={() => cambiarVistoBueno(tarea)}
+                            style={tarea.vistoBueno ? styles.unapproveButton : styles.approveButton}
+                          >
+                            {tarea.vistoBueno ? 'Quitar VB' : 'Dar VB'}
+                          </button>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ ...styles.td, borderColor: colors.border }}>
                       <div style={styles.actions}>
                         <button onClick={() => abrirEdicion(tarea)} style={styles.iconButton} title={canManage ? 'Editar tarea' : 'Reportar avance'}>
@@ -582,6 +634,10 @@ const styles = {
   badgeList: { display: 'flex', flexWrap: 'wrap', gap: '6px' },
   personBadge: { display: 'inline-flex', alignItems: 'center', gap: '5px', border: '1px solid', borderRadius: '999px', padding: '5px 8px', fontSize: '12px', fontWeight: 700 },
   statusBadge: { border: '1px solid', borderRadius: '999px', padding: '5px 9px', fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap' },
+  validationCell: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' },
+  validationBadge: { borderRadius: '999px', padding: '5px 9px', fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap' },
+  approveButton: { border: 0, borderRadius: '8px', padding: '7px 9px', backgroundColor: '#dcfce7', color: '#15803d', fontSize: '12px', fontWeight: 900, cursor: 'pointer' },
+  unapproveButton: { border: 0, borderRadius: '8px', padding: '7px 9px', backgroundColor: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: 900, cursor: 'pointer' },
   progressWrap: { display: 'flex', alignItems: 'center', gap: '8px', minWidth: '130px' },
   progressTrack: { flex: 1, height: '8px', borderRadius: '999px', backgroundColor: '#e2e8f0', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: '999px' },
