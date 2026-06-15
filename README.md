@@ -1,8 +1,8 @@
 # Innovatech Solutions - Frontend
 
-Frontend de la Plataforma Inteligente de Gestion de Proyectos y Recursos Humanos.
+Frontend de la Plataforma Inteligente de Gestion de Proyectos, Recursos Humanos y Tareas para Innovatech Solutions.
 
-La aplicacion esta desarrollada en React y consume el BFF del backend de Innovatech Solutions.
+La aplicacion esta desarrollada en React y consume el BFF del backend de Innovatech Solutions. Incluye autenticacion, control visual por roles, gestion de proyectos, gestion de recursos, gestion de tareas, dashboard con KPIs y soporte para modo claro/oscuro.
 
 ## Integrantes
 
@@ -21,14 +21,14 @@ Estructura principal:
 
 ```text
 innovatech-frontend-mercado-bello
-├── README.md
-└── innovatech-frontend
-    ├── public
-    ├── src
-    ├── Dockerfile
-    ├── nginx.conf
-    ├── package.json
-    └── README.md
+|-- README.md
+`-- innovatech-frontend
+    |-- public
+    |-- src
+    |-- Dockerfile
+    |-- nginx.conf
+    |-- package.json
+    `-- README.md
 ```
 
 ## Funcionalidades
@@ -36,22 +36,27 @@ innovatech-frontend-mercado-bello
 - Login y registro de usuarios.
 - Autenticacion con JWT.
 - Control visual de permisos por rol.
-- Dashboard con resumen de proyectos, empleados y asignaciones.
+- Dashboard con resumen general y KPIs.
 - Gestion de proyectos.
 - Gestion de recursos humanos.
+- Gestion de tareas por proyecto.
+- Creacion, edicion y eliminacion de tareas segun rol.
+- Asignacion de uno o mas responsables a cada tarea.
+- Control de estado, prioridad, avance y visto bueno de cierre en tareas.
+- Reportes KPI de tareas por estado, proyecto y responsable.
 - Asignacion de empleados a uno o mas proyectos.
 - Visto bueno de proyectos y opcion para quitarlo.
 - Modo claro/oscuro.
-- Diseno responsivo para escritorio y celular.
+- Interfaz visual renovada y responsiva para escritorio y celular.
 - Soporte para Docker.
 
 ## Roles
 
 | Rol | Permisos en la interfaz |
 | --- | --- |
-| USUARIO | Visualiza informacion y da/quita visto bueno |
-| JEFE_PROYECTO | Crea/edita proyectos, crea/edita recursos y asigna empleados |
-| ADMIN | Tiene acceso completo, incluyendo eliminar proyectos y recursos |
+| USUARIO | Visualiza informacion, consulta tareas y participa en seguimiento |
+| JEFE_PROYECTO | Crea/edita proyectos, recursos y tareas; asigna empleados y responsables |
+| ADMIN | Tiene acceso completo, incluyendo eliminar proyectos, recursos y tareas |
 
 ## Tecnologias
 
@@ -59,7 +64,7 @@ innovatech-frontend-mercado-bello
 - React Router DOM
 - Axios
 - React Icons
-- CSS en `src/index.css`
+- CSS modular y global
 - Docker
 - nginx para publicar el build en contenedor
 
@@ -69,7 +74,7 @@ El Docker Compose principal esta en el repositorio backend. Para levantar todo e
 
 ```powershell
 cd C:\Users\%USERNAME%\innovatech\innovatech-backend-mercado-bello
-docker compose up --build
+docker compose up -d --build
 ```
 
 Luego abrir:
@@ -103,9 +108,12 @@ Auth: http://localhost:8083/api/auth
 BFF:  http://localhost:8084/api/bff
 ```
 
+El BFF centraliza la informacion de proyectos, recursos y tareas para que el frontend no tenga que comunicarse directamente con cada microservicio.
+
 ## Branching
 
 Se uso GitHub Flow:
 
 - `main`: version estable.
-- `feature/frontend-matias-bello`: desarrollo del frontend.
+- `feature/frontend-matias-bello`: desarrollo inicial del frontend.
+- `main`: integracion final EV3 de tareas, KPIs y renovacion visual.
